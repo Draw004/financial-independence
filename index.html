@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Financial Independence Planner | Carrowmont</title>
+  <meta name="description" content="Explore how spending, savings, investment returns, inflation and a planning withdrawal rate may influence your path to financial independence." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://carrowmont.com/financial-independence/" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:site_name" content="Carrowmont" />
+  <meta property="og:title" content="Financial Independence Planner | Carrowmont" />
+  <meta property="og:description" content="Model a financial-independence target and compare it with your current savings path." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://carrowmont.com/financial-independence/" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="theme-color" content="#0e827a" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Carrowmont Financial Independence Planner","url":"https://carrowmont.com/financial-independence/","applicationCategory":"FinanceApplication","operatingSystem":"Any","description":"An educational financial-independence calculator for modelling a spending-based target, portfolio growth and target-age funding needs."}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand-cluster">
+      <a class="brand" href="/" aria-label="Carrowmont home">CARROWMONT</a>
+      <span class="brand-divider" aria-hidden="true"></span>
+      <span class="product-label">Financial Independence</span>
+    </div>
+    <div class="header-actions">
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a href="#planner">Planner</a><a href="#how">How it works</a><a href="#methodology">Methodology</a><a href="/#tools">All tools</a><a href="/">Home</a>
+      </nav>
+      <details class="locale-menu" id="localeMenu">
+        <summary id="localeSummary" aria-label="Choose country and currency"><span class="locale-globe" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 4.5 6 4.5 9S15 18 12 21c-3-3-4.5-6-4.5-9S9 6 12 3z"/></svg></span><span id="localeCurrent">India · INR</span><span class="locale-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="locale-popover">
+          <h3>Country &amp; currency</h3><p>Choose the context that makes the numbers easiest to understand.</p>
+          <label>Country / region<select id="regionSelect"></select></label>
+          <label>Currency<select id="currencySelect"></select></label>
+          <div class="locale-note"><strong>Important:</strong> Changing currency changes the unit and number format. It does not convert entered amounts using an exchange rate.</div>
+          <button class="btn btn-primary btn-small" id="localeDone" type="button">Done</button>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="intro">
+  <div class="container intro-grid">
+    <div>
+      <div class="eyebrow">FINANCIAL INDEPENDENCE</div>
+      <h1>See how spending and saving may shape your path to financial independence.</h1>
+      <p class="lede">Estimate a spending-based portfolio target, compare it with your current investment path, and see what may need to change to reach a selected age.</p>
+      <div class="chips"><span>Spending-based target</span><span>Target-age comparison</span><span>Country-aware currencies</span></div>
+    </div>
+    <div class="intro-card">
+      <div class="eyebrow">THE IDEA</div>
+      <div class="mini-flow"><strong>Future spending</strong><span>→</span><strong>Portfolio target</strong><span>→</span><strong>Savings path</strong></div>
+      <p>The planner keeps the withdrawal-rate assumption visible and editable. It is a modelling input, not a promise of sustainable future withdrawals.</p>
+    </div>
+  </div>
+</section>
+
+<section class="planner-shell" id="planner">
+  <div class="container planner-grid">
+    <section class="planner-card">
+      <div class="section-head"><div><div class="eyebrow">YOUR PLAN</div><h2>Build the assumptions</h2></div><button class="text-btn" id="resetBtn" type="button">Reset</button></div>
+
+      <div class="step">
+        <div class="step-title"><span>1</span><div><h3>Lifestyle &amp; independence target</h3><p>Start with spending in today’s money and the share you expect to continue after reaching financial independence.</p></div></div>
+        <div class="fields">
+          <label class="field"><span>Current age</span><div class="input-suffix"><input id="currentAge" type="number" min="18" max="80" step="1" value="35" /><span>yrs</span></div></label>
+          <label class="field"><span>Target financial-independence age</span><div class="input-suffix"><input id="targetAge" type="number" min="19" max="90" step="1" value="50" /><span>yrs</span></div><small>Used to calculate the monthly investment indicated for that age.</small></label>
+          <label class="field"><span>Current monthly spending</span><div class="money-input"><span class="currency-prefix">₹</span><input id="monthlySpending" type="number" min="0" step="1000" value="100000" /></div><small>Enter normal household/lifestyle spending in today’s money.</small></label>
+          <label class="field"><span>Spending expected at financial independence</span><div class="input-suffix"><input id="spendingPct" type="number" min="0" max="200" step="1" value="100" /><span>% of today</span></div><small>Use 100% if you expect similar real spending.</small></label>
+          <label class="field"><span>Monthly income not funded by portfolio</span><div class="money-input"><span class="currency-prefix">₹</span><input id="monthlyIncome" type="number" min="0" step="1000" value="0" /></div><small>Optional recurring income expressed in today’s money; the model treats it as retaining the same purchasing power over time.</small></label>
+          <label class="field"><span>Planning withdrawal rate</span><div class="input-suffix"><input id="withdrawalRate" type="number" min="0.5" max="15" step="0.1" value="4" /><span>%</span></div><small>An editable planning assumption, not a guaranteed or recommended withdrawal rate.</small></label>
+          <label class="field"><span>Inflation assumption</span><div class="input-suffix"><input id="inflation" type="number" min="0" max="25" step="0.1" value="5" /><span>%</span></div><small>Used to express the spending-based target in future nominal money.</small></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span>2</span><div><h3>Portfolio &amp; saving assumptions</h3><p>These inputs determine how your invested assets may grow before financial independence.</p></div></div>
+        <div class="fields">
+          <label class="field"><span>Current invested assets</span><div class="money-input"><span class="currency-prefix">₹</span><input id="currentAssets" type="number" min="0" step="1000" value="1500000" /></div></label>
+          <label class="field"><span>Current monthly investment</span><div class="money-input"><span class="currency-prefix">₹</span><input id="monthlyContribution" type="number" min="0" step="500" value="30000" /></div></label>
+          <label class="field"><span>Expected annual investment return</span><div class="input-suffix"><input id="annualReturn" type="number" min="0" max="30" step="0.1" value="10" /><span>%</span></div><small>Used as a constant nominal modelling assumption.</small></label>
+          <label class="field"><span>Annual increase in monthly investment</span><div class="input-suffix"><input id="annualStepUp" type="number" min="0" max="30" step="0.5" value="5" /><span>% / yr</span></div><small>Models a once-a-year increase in monthly contributions.</small></label>
+        </div>
+      </div>
+    </section>
+
+    <aside class="snapshot" aria-live="polite">
+      <div class="eyebrow">YOUR ESTIMATE</div>
+      <h2>Financial independence snapshot</h2>
+      <div class="pill" id="targetPill">Target age 50</div>
+      <div class="hero-result">
+        <span>Estimated FI number in today’s money</span>
+        <strong id="fiToday">₹3 Cr</strong>
+        <small id="fiTodayNote">Based on portfolio-funded spending and your withdrawal-rate assumption</small>
+      </div>
+      <dl class="metrics">
+        <div><dt>Modelled FI timing</dt><dd id="modelledAge">Age 65.7</dd></div>
+        <div><dt>FI target at selected age (future money)</dt><dd id="fiTargetAge">₹6.24 Cr</dd></div>
+        <div><dt>Projected portfolio at selected age (future money)</dt><dd id="portfolioTargetAge">₹2.21 Cr</dd></div>
+        <div><dt>Total monthly investment indicated</dt><dd id="requiredMonthly">₹1,06,601</dd></div>
+        <div><dt>Additional monthly investment indicated</dt><dd id="additionalMonthly">₹76,601</dd></div>
+      </dl>
+      <div class="funding-box">
+        <div><span>Projected funding at target age</span><strong id="fundingPct">35%</strong></div>
+        <div class="bar"><i id="fundingBar" style="width:35%"></i></div>
+        <p id="fundingText">Your current plan is projected to cover about 35% of the modelled target at age 50.</p>
+      </div>
+      <div class="snapshot-actions"><button class="btn btn-outline" id="copyBtn" type="button">Copy summary</button><a class="btn btn-primary btn-link" href="#methodology">View methodology</a></div>
+      <p class="fineprint">Illustrative planning tool only. Results depend on the assumptions entered and do not guarantee investment outcomes or sustainable withdrawals.</p>
+    </aside>
+  </div>
+</section>
+
+<section class="visuals">
+  <div class="container">
+    <div class="section-head wide"><div><div class="eyebrow">VISUAL PLAN</div><h2>See the target and portfolio path together</h2></div><p>Charts update automatically as you change the assumptions.</p></div>
+    <div class="empty-state" id="visualEmpty">
+      <div class="empty-state-icon" aria-hidden="true">↗</div>
+      <div><h3>Enter your details to see your FI path</h3><p>Add your current spending and investment details above. Your target, projected portfolio, charts and comparisons will appear here automatically.</p></div>
+    </div>
+    <div id="visualContent">
+      <div class="summary-row">
+        <div><span>Portfolio-funded spending today</span><strong id="netSpendCard">₹1,00,000/mo</strong></div>
+        <div><span>FI number today</span><strong id="fiTodayCard">₹3 Cr</strong></div>
+        <div><span>FI target at selected age · future money</span><strong id="fiTargetCard">₹6.24 Cr</strong></div>
+        <div><span>Projected portfolio at selected age · future money</span><strong id="portfolioCard">₹2.21 Cr</strong></div>
+      </div>
+      <div class="chart-grid">
+        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">TARGET VS PORTFOLIO</div><h3>When the two paths may meet</h3></div><p>Hover or tap to inspect ages and values.</p></div><svg id="pathChart" viewBox="0 0 800 300" role="img" aria-label="Financial independence target versus projected portfolio chart"></svg></article>
+        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">PORTFOLIO BUILD</div><h3>Money added vs projected value</h3></div><p>Compare cumulative money added with the modelled portfolio value.</p></div><svg id="growthChart" viewBox="0 0 800 300" role="img" aria-label="Cumulative invested money versus projected portfolio value chart"></svg></article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="insights" id="insightsSection">
+  <div class="container">
+    <div class="section-head wide"><div><div class="eyebrow">PLAN INSIGHTS</div><h2>What the assumptions are doing</h2></div><p>These are arithmetic observations from the current inputs, not personalized advice.</p></div>
+    <div class="insight-grid">
+      <article><span>Spending multiple</span><strong id="insightMultiple">25.0×</strong><p id="insightMultipleText"></p></article>
+      <article><span>Inflation effect</span><strong id="insightInflation">+108%</strong><p id="insightInflationText"></p></article>
+      <article><span>Current-plan timing</span><strong id="insightTiming">Age 65.7</strong><p id="insightTimingText"></p></article>
+      <article><span>Target-age adjustment</span><strong id="insightAdjustment">+₹76,601/mo</strong><p id="insightAdjustmentText"></p></article>
+    </div>
+  </div>
+</section>
+
+<section class="scenarios" id="scenariosSection">
+  <div class="container">
+    <div class="section-head wide"><div><div class="eyebrow">WHAT IF?</div><h2>Compare target ages</h2></div><p>Same spending, return, inflation and contribution-growth assumptions; only the target age changes. Values shown are future nominal amounts at each age.</p></div>
+    <div class="scenario-grid" id="scenarioGrid"></div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="container two-col">
+    <div><div class="eyebrow">HOW IT WORKS</div><h2>Separate the lifestyle target from the investment path.</h2></div>
+    <div><p>First, Carrowmont estimates the monthly spending that would need to be funded by the portfolio. That annual amount is divided by the withdrawal-rate assumption to create an illustrative financial-independence number in today’s money.</p><p>The planner then grows that target with the inflation assumption and compares it with the projected value of current assets and future monthly investments.</p></div>
+  </div>
+</section>
+
+<section class="methodology" id="methodology">
+  <div class="container two-col">
+    <div><div class="eyebrow">METHODOLOGY</div><h2>Transparent calculations.</h2></div>
+    <div>
+      <p><strong>Portfolio-funded monthly spending:</strong> Current monthly spending × expected spending percentage − recurring non-portfolio income.</p>
+      <p><strong>FI number today:</strong> Annual portfolio-funded spending ÷ planning withdrawal rate.</p>
+      <p><strong>Future FI target:</strong> Today’s FI number × (1 + inflation assumption)<sup>years</sup>. Recurring non-portfolio income entered in today’s money is therefore treated as retaining the same real purchasing power.</p>
+      <p><strong>Portfolio projection:</strong> Existing invested assets grow using the monthly rate implied by the annual return. Contributions are added at month-end and can increase once each year by the entered step-up rate.</p>
+      <p><strong>Modelled FI age:</strong> The first month when the projected portfolio equals or exceeds the inflation-adjusted FI target, checked through age 90.</p>
+      <p><strong>Monthly investment indicated:</strong> The starting monthly contribution that would model to the selected-age target while applying the entered annual step-up. It is solved numerically.</p>
+      <p class="method-note"><strong>Important:</strong> The withdrawal rate is only a planning assumption. The model does not determine whether a withdrawal rate is safe or suitable, and it does not model market sequence risk, taxes, fees, asset allocation, changing returns, longevity, or future policy changes unless those effects are reflected in your inputs.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container footer-grid"><div><strong>CARROWMONT</strong><p>Financial planning tools and educational resources for clearer financial decisions.</p></div><div><strong>Tools</strong><a href="/retirement-calculator/">Retirement Planner</a><a href="/inflation-calculator/">Inflation Calculator</a><a href="/goal-planner/">Goal Planner</a><a href="/financial-independence/">Financial Independence</a><a href="/#tools">All tools</a></div><div><strong>Carrowmont</strong><a href="/learn.html">Learn</a><a href="/about.html">About</a><a href="/methodology.html">Methodology</a><a href="/contact.html">Contact</a></div><div><strong>Legal</strong><a href="/disclaimer.html">Disclaimer</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div></div><div class="container footer-bottom"><span>© 2026 Carrowmont</span><span>Illustrative estimates, not financial advice.</span></div></footer>
+
+<script src="locale.js"></script>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

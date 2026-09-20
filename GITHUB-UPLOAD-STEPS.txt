@@ -1,0 +1,24 @@
+CARROWMONT FINANCIAL INDEPENDENCE - NEW GITHUB REPOSITORY
+
+Repository name:
+financial-independence
+
+Repository description:
+Carrowmont Financial Independence Planner - model spending, savings and investment assumptions on the path to financial independence.
+
+Upload these files to the ROOT of the new repository:
+- index.html
+- styles.css
+- app.js
+- core.js
+- locale.js
+- README.md
+
+Then enable GitHub Pages:
+Settings > Pages > Deploy from a branch > main > /(root) > Save
+
+Expected live path after GitHub Pages publishes:
+https://carrowmont.com/financial-independence/
+
+Suggested first commit message:
+Launch Carrowmont Financial Independence Planner
