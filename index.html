@@ -31,7 +31,7 @@
         <a href="#planner">Planner</a><a href="#how">How it works</a><a href="#methodology">Methodology</a><a href="/#tools">All tools</a><a href="/">Home</a>
       </nav>
       <details class="locale-menu" id="localeMenu">
-        <summary id="localeSummary" aria-label="Choose country and currency"><span class="locale-globe" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 4.5 6 4.5 9S15 18 12 21c-3-3-4.5-6-4.5-9S9 6 12 3z"/></svg></span><span id="localeCurrent">India · INR</span><span class="locale-chevron" aria-hidden="true">⌄</span></summary>
+        <summary id="localeSummary" aria-label="Choose country and currency"><span class="locale-globe" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 4.5 6 4.5 9S15 18 12 21c-3-3-4.5-6-4.5-9S9 6 12 3z"/></svg></span><span id="localeCurrent">India · INR</span><span class="locale-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></summary>
         <div class="locale-popover">
           <h3>Country &amp; currency</h3><p>Choose the context that makes the numbers easiest to understand.</p>
           <label>Country / region<select id="regionSelect"></select></label>
@@ -65,13 +65,13 @@
 <section class="planner-shell" id="planner">
   <div class="container planner-grid">
     <section class="planner-card">
-      <div class="section-head"><div><div class="eyebrow">YOUR PLAN</div><h2>Build the assumptions</h2></div><button class="text-btn" id="resetBtn" type="button">Reset</button></div>
+      <div class="section-head"><div><div class="eyebrow">YOUR PLAN</div><h2>Build the assumptions</h2></div><button class="text-btn" id="resetBtn" type="button">Reset to Defaults</button></div>
 
       <div class="step">
         <div class="step-title"><span>1</span><div><h3>Lifestyle &amp; independence target</h3><p>Start with spending in today’s money and the share you expect to continue after reaching financial independence.</p></div></div>
         <div class="fields">
           <label class="field"><span>Current age</span><div class="input-suffix"><input id="currentAge" type="number" min="18" max="80" step="1" value="35" /><span>yrs</span></div></label>
-          <label class="field"><span>Target financial-independence age</span><div class="input-suffix"><input id="targetAge" type="number" min="19" max="90" step="1" value="50" /><span>yrs</span></div><small>Used to calculate the monthly investment indicated for that age.</small></label>
+          <label class="field"><span>Target financial-independence age</span><div class="input-suffix"><input id="targetAge" type="number" min="19" max="90" step="1" value="50" /><span>yrs</span></div><small>Used to calculate the monthly investment required for that age.</small></label>
           <label class="field"><span>Current monthly spending</span><div class="money-input"><span class="currency-prefix">₹</span><input id="monthlySpending" type="number" min="0" step="1000" value="100000" /></div><small>Enter normal household/lifestyle spending in today’s money.</small></label>
           <label class="field"><span>Spending expected at financial independence</span><div class="input-suffix"><input id="spendingPct" type="number" min="0" max="200" step="1" value="100" /><span>% of today</span></div><small>Use 100% if you expect similar real spending.</small></label>
           <label class="field"><span>Monthly income not funded by portfolio</span><div class="money-input"><span class="currency-prefix">₹</span><input id="monthlyIncome" type="number" min="0" step="1000" value="0" /></div><small>Optional recurring income expressed in today’s money; the model treats it as retaining the same purchasing power over time.</small></label>
@@ -104,15 +104,15 @@
         <div><dt>Modelled FI timing</dt><dd id="modelledAge">Age 65.7</dd></div>
         <div><dt>FI target at selected age (future money)</dt><dd id="fiTargetAge">₹6.24 Cr</dd></div>
         <div><dt>Projected portfolio at selected age (future money)</dt><dd id="portfolioTargetAge">₹2.21 Cr</dd></div>
-        <div><dt>Total monthly investment indicated</dt><dd id="requiredMonthly">₹1,06,601</dd></div>
-        <div><dt>Additional monthly investment indicated</dt><dd id="additionalMonthly">₹76,601</dd></div>
+        <div><dt>Total monthly investment required</dt><dd id="requiredMonthly">₹1,06,601</dd></div>
+        <div><dt>Additional monthly investment required</dt><dd id="additionalMonthly">₹76,601</dd></div>
       </dl>
       <div class="funding-box">
         <div><span>Projected funding at target age</span><strong id="fundingPct">35%</strong></div>
         <div class="bar"><i id="fundingBar" style="width:35%"></i></div>
         <p id="fundingText">Your current plan is projected to cover about 35% of the modelled target at age 50.</p>
       </div>
-      <div class="snapshot-actions"><button class="btn btn-outline" id="copyBtn" type="button">Copy summary</button><a class="btn btn-primary btn-link" href="#methodology">View methodology</a></div>
+      <div class="snapshot-actions"><button class="btn btn-outline" id="copyBtn" type="button">Copy Summary</button><button class="btn btn-primary" id="reportBtn" type="button">Generate Financial Independence Report</button></div>
       <p class="fineprint">Illustrative planning tool only. Results depend on the assumptions entered and do not guarantee investment outcomes or sustainable withdrawals.</p>
     </aside>
   </div>
@@ -175,7 +175,7 @@
       <p><strong>Future FI target:</strong> Today’s FI number × (1 + inflation assumption)<sup>years</sup>. Recurring non-portfolio income entered in today’s money is therefore treated as retaining the same real purchasing power.</p>
       <p><strong>Portfolio projection:</strong> Existing invested assets grow using the monthly rate implied by the annual return. Contributions are added at month-end and can increase once each year by the entered step-up rate.</p>
       <p><strong>Modelled FI age:</strong> The first month when the projected portfolio equals or exceeds the inflation-adjusted FI target, checked through age 90.</p>
-      <p><strong>Monthly investment indicated:</strong> The starting monthly contribution that would model to the selected-age target while applying the entered annual step-up. It is solved numerically.</p>
+      <p><strong>Monthly investment required:</strong> The starting monthly contribution that would model to the selected-age target while applying the entered annual step-up. It is solved numerically.</p>
       <p class="method-note"><strong>Important:</strong> The withdrawal rate is only a planning assumption. The model does not determine whether a withdrawal rate is safe or suitable, and it does not model market sequence risk, taxes, fees, asset allocation, changing returns, longevity, or future policy changes unless those effects are reflected in your inputs.</p>
     </div>
   </div>
@@ -186,6 +186,8 @@
 
 <script src="locale.js"></script>
 <script src="core.js"></script>
+<script src="pdf-export.js"></script>
+<script src="fi-pdf-renderer.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

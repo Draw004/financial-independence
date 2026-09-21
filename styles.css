@@ -8,3 +8,12 @@
 .tool-breadcrumb a:hover{text-decoration:underline}
 .intro .tool-breadcrumb + .intro-grid{padding-top:42px}
 @media(max-width:720px){.tool-breadcrumb{padding-top:12px}.intro .tool-breadcrumb + .intro-grid{padding-top:30px}}
+
+/* Standardized locale control alignment */
+.locale-menu summary{appearance:none;-webkit-appearance:none;line-height:1}
+.locale-menu summary::marker{content:""}
+.locale-globe{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px;line-height:0}
+.locale-globe svg{width:18px;height:18px;display:block;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.locale-chevron{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 14px;font-size:0}
+.locale-chevron svg{width:14px;height:14px;display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.snapshot-actions .btn{min-height:54px;display:flex;align-items:center;justify-content:center;line-height:1.25}
