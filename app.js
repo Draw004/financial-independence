@@ -123,7 +123,7 @@
   }
 
   function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p,m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return m*p;}
-  function chartBase(svg,maxVal,minAge,maxAge){const W=800,H=300,l=82,r=20,t=20,b=42,iw=W-l-r,ih=H-t-b,x=age=>l+((age-minAge)/(maxAge-minAge))*iw,yy=v=>t+ih-(v/maxVal)*ih;let h='';for(let i=0;i<=4;i++){const v=maxVal*i/4,py=yy(v);h+=`<line class="gridline" x1="${l}" x2="${W-r}" y1="${py}" y2="${py}"/><text class="axis" x="${l-10}" y="${py+4}" text-anchor="end">${esc(compact(v))}</text>`;}[minAge,(minAge+maxAge)/2,maxAge].forEach(age=>h+=`<text class="axis" x="${x(age)}" y="${H-14}" text-anchor="middle">Age ${Math.round(age)}</text>`);svg.innerHTML=h;return{x,yy,W,H,l,r,t,b,iw,ih,minAge,maxAge};}
+  function chartBase(svg,maxVal,minAge,maxAge){const W=800,H=330,l=82,r=20,t=72,b=42,iw=W-l-r,ih=H-t-b,x=age=>l+((age-minAge)/(maxAge-minAge))*iw,yy=v=>t+ih-(v/maxVal)*ih;let h='';for(let i=0;i<=4;i++){const v=maxVal*i/4,py=yy(v);h+=`<line class="gridline" x1="${l}" x2="${W-r}" y1="${py}" y2="${py}"/><text class="axis" x="${l-10}" y="${py+4}" text-anchor="end">${esc(compact(v))}</text>`;}[minAge,(minAge+maxAge)/2,maxAge].forEach(age=>h+=`<text class="axis" x="${x(age)}" y="${H-14}" text-anchor="middle">Age ${Math.round(age)}</text>`);svg.innerHTML=h;return{x,yy,W,H,l,r,t,b,iw,ih,minAge,maxAge};}
   function bindChart(svg,series,g){
     const card=svg.closest('.chart-card');let tip=card.querySelector('.fi-chart-tooltip');if(!tip){tip=document.createElement('div');tip.className='fi-chart-tooltip';tip.setAttribute('aria-hidden','true');card.appendChild(tip);}let guide=document.createElementNS('http://www.w3.org/2000/svg','line');guide.setAttribute('class','fi-chart-guide');guide.setAttribute('y1',g.t);guide.setAttribute('y2',g.H-g.b);guide.setAttribute('visibility','hidden');svg.appendChild(guide);const dots=series.map(ser=>{const d=document.createElementNS('http://www.w3.org/2000/svg','circle');d.setAttribute('class','fi-chart-hover-dot');d.setAttribute('r','5');d.setAttribute('fill',ser.color);d.setAttribute('visibility','hidden');svg.appendChild(d);return d;});
     const hide=()=>{tip.classList.remove('visible');tip.setAttribute('aria-hidden','true');guide.setAttribute('visibility','hidden');dots.forEach(d=>d.setAttribute('visibility','hidden'));};let touchPinned=false;
@@ -132,36 +132,70 @@
     svg.onpointermove=ev=>{if(ev.pointerType!=='touch')show(ev);};svg.onpointerdown=ev=>{show(ev);touchPinned=ev.pointerType==='touch';};svg.onpointerleave=ev=>{if(ev.pointerType!=='touch'&&!touchPinned)hide();};svg.onpointercancel=hide;
   }
   function path(points,g,key){return points.map((p,i)=>`${i?'L':'M'}${g.x(p.age)},${g.yy(p[key])}`).join(' ');}
+
+  function addStaticChartValues(svg,g,ages,series){
+    const unique=[];ages.forEach(a=>{if(!unique.some(v=>Math.abs(v-a)<.5))unique.push(a);});
+    const nearest=(pts,age)=>pts.reduce((best,p)=>Math.abs(p.age-age)<Math.abs(best.age-age)?p:best,pts[0]);
+    const boxW=204,boxH=50,boxY=8;
+    unique.slice(0,3).forEach((age,i,arr)=>{
+      const anchor=nearest(series[0].points,age),actualAge=anchor.age;
+      const bx=i===0?g.l:(i===arr.length-1?g.W-g.r-boxW:g.l+(g.iw-boxW)/2);
+      const first=nearest(series[0].points,actualAge),second=nearest(series[1].points,actualAge);
+      const ageLabel=`Age ${Math.round(actualAge)}`;
+      const label1=`${series[0].shortLabel}: ${compact(first.v)}`;
+      const label2=`${series[1].shortLabel}: ${compact(second.v)}`;
+      svg.innerHTML+=`<g class="fi-static-value"><rect x="${bx}" y="${boxY}" width="${boxW}" height="${boxH}" rx="8" fill="#ffffff" stroke="#c9d9e2"/><text x="${bx+10}" y="${boxY+15}" font-size="10.5" font-weight="800" fill="#102945">${esc(ageLabel)}</text><line x1="${bx+10}" x2="${bx+24}" y1="${boxY+29}" y2="${boxY+29}" stroke="${series[0].color}" stroke-width="3"/><text x="${bx+30}" y="${boxY+32}" font-size="9.5" font-weight="650" fill="#405b75">${esc(label1)}</text><line x1="${bx+10}" x2="${bx+24}" y1="${boxY+43}" y2="${boxY+43}" stroke="${series[1].color}" stroke-width="3"/><text x="${bx+30}" y="${boxY+46}" font-size="9.5" font-weight="650" fill="#405b75">${esc(label2)}</text></g>`;
+    });
+  }
   function renderCharts(r,rawState){
-    // C.series expects the raw UI percentages (e.g. 5 for 5%), while r.state is
-    // already normalized (0.05). Passing r.state here would normalize twice and
-    // make the FI target series collapse toward zero. Always feed the raw UI state.
-    const s=r.state;let endAge=Math.max(s.targetAge+5,s.currentAge+20);if(r.modelledFI.reached)endAge=Math.max(endAge,Math.ceil(r.modelledFI.age+2));endAge=Math.min(90,endAge);const points=C.series(rawState,endAge);const max=niceMax(Math.max(...points.flatMap(p=>[p.target,p.portfolio]))*1.08),g=chartBase(els.pathChart,max,s.currentAge,endAge);els.pathChart.innerHTML+=`<path class="target-line" d="${path(points,g,'target')}"/><path class="plan-line" d="${path(points,g,'portfolio')}"/>`;bindChart(els.pathChart,[{label:'FI target',color:'#173d5c',points:points.map(p=>({age:p.age,v:p.target}))},{label:'Projected portfolio',color:'#0e8b80',points:points.map(p=>({age:p.age,v:p.portfolio}))}],g);
-    const added=points.map(p=>({age:p.age,added:s.currentAssets+p.contributions,portfolio:p.portfolio})),max2=niceMax(Math.max(...added.flatMap(p=>[p.added,p.portfolio]))*1.08),g2=chartBase(els.growthChart,max2,s.currentAge,endAge);els.growthChart.innerHTML+=`<path class="added-line" d="${path(added,g2,'added')}"/><path class="plan-line" d="${path(added,g2,'portfolio')}"/>`;bindChart(els.growthChart,[{label:'Assets + contributions',color:'#8799aa',points:added.map(p=>({age:p.age,v:p.added}))},{label:'Projected portfolio',color:'#0e8b80',points:added.map(p=>({age:p.age,v:p.portfolio}))}],g2);
+    // Core.series expects raw UI percentages (for example 5 for 5%).
+    // r.state already contains normalized decimals, so use rawState here.
+    const st=r.state;
+    let endAge=Math.max(st.targetAge+5,st.currentAge+20);
+    if(r.modelledFI.reached)endAge=Math.max(endAge,Math.ceil(r.modelledFI.age+2));
+    endAge=Math.min(90,endAge);
+    const points=C.series(rawState,endAge);
+    const pathSeries=[
+      {label:'FI target',shortLabel:'Target',color:'#173d5c',points:points.map(p=>({age:p.age,v:p.target}))},
+      {label:'Projected portfolio',shortLabel:'Portfolio',color:'#0e8b80',points:points.map(p=>({age:p.age,v:p.portfolio}))}
+    ];
+    const max=niceMax(Math.max(...points.flatMap(p=>[p.target,p.portfolio]))*1.08),g=chartBase(els.pathChart,max,st.currentAge,endAge);
+    els.pathChart.innerHTML+=`<path class="target-line" d="${path(points,g,'target')}"/><path class="plan-line" d="${path(points,g,'portfolio')}"/>`;
+    addStaticChartValues(els.pathChart,g,[st.currentAge,st.targetAge,endAge],pathSeries);
+    bindChart(els.pathChart,pathSeries,g);
+
+    const added=points.map(p=>({age:p.age,added:st.currentAssets+p.contributions,portfolio:p.portfolio}));
+    const growthSeries=[
+      {label:'Assets + contributions',shortLabel:'Money added',color:'#8799aa',points:added.map(p=>({age:p.age,v:p.added}))},
+      {label:'Projected portfolio',shortLabel:'Portfolio',color:'#0e8b80',points:added.map(p=>({age:p.age,v:p.portfolio}))}
+    ];
+    const max2=niceMax(Math.max(...added.flatMap(p=>[p.added,p.portfolio]))*1.08),g2=chartBase(els.growthChart,max2,st.currentAge,endAge);
+    els.growthChart.innerHTML+=`<path class="added-line" d="${path(added,g2,'added')}"/><path class="plan-line" d="${path(added,g2,'portfolio')}"/>`;
+    addStaticChartValues(els.growthChart,g2,[st.currentAge,st.targetAge,endAge],growthSeries);
+    bindChart(els.growthChart,growthSeries,g2);
   }
 
   async function copySummary(){const r=C.result(state()),s=r.state,txt=[`CARROWMONT FINANCIAL INDEPENDENCE SUMMARY`,``,`Country / region: ${L.getProfile().label}`,`Currency: ${L.getCurrency()}`,`Current age: ${s.currentAge}`,`Target age: ${s.targetAge}`,`Monthly spending today: ${money(s.monthlySpending)}`,`Expected spending at FI: ${(s.spendingPct*100).toFixed(0)}% of today`,`Monthly non-portfolio income at FI: ${money(s.monthlyIncome)}`,`Planning withdrawal rate: ${(s.withdrawalRate*100).toFixed(1)}%`,`Inflation assumption: ${(s.inflation*100).toFixed(1)}%`,`Expected investment return: ${(s.annualReturn*100).toFixed(1)}%`,`Annual contribution increase: ${(s.annualStepUp*100).toFixed(1)}%`,``,`Estimated FI number today: ${money(r.fiToday)}`,`FI target at age ${s.targetAge}: ${money(r.target.target)}`,`Projected portfolio at age ${s.targetAge}: ${money(r.target.portfolio)}`,`Starting monthly investment required: ${money(r.requiredMonthly)}`,`Additional monthly investment required: ${money(r.additionalMonthly)}`,`Modelled FI timing under current plan: ${r.target.target<=0?'No portfolio target':(r.modelledFI.reached?r.modelledFI.age.toFixed(1):'Not reached by age 90')}`,``,`Illustrative estimate only. The withdrawal rate is a planning assumption, not a guarantee or recommendation.`,`carrowmont.com`].join('\n');try{await navigator.clipboard.writeText(txt);els.copyBtn.textContent='Copied';setTimeout(()=>els.copyBtn.textContent='Copy Summary',1400);}catch(_){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}}
 
   async function generateFIReport(){
+    const status=document.getElementById('reportDownloadStatus');
     if(!window.CarrowmontPdfExport||!window.CarrowmontFIPdfRenderer){
-      alert('The PDF download engine did not load. Please refresh the page and try again.');
+      if(status)status.textContent='The report could not be generated. Please refresh the page and try again.';
       return;
     }
     const r=C.result(state());
-    const original=els.reportBtn.textContent;
-    els.reportBtn.disabled=true;els.reportBtn.setAttribute('aria-busy','true');els.reportBtn.textContent='Preparing PDF...';
+    els.reportBtn.disabled=true;els.reportBtn.setAttribute('aria-busy','true');
+    if(status)status.textContent='Preparing your report...';
     try{
       const canvases=await window.CarrowmontFIPdfRenderer.render(r);
       const d=new Date(),yyyy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');
       await window.CarrowmontPdfExport.downloadCanvases(canvases,{filename:`financial-independence-report-${yyyy}-${mm}-${dd}.pdf`,quality:.95});
-      els.reportBtn.textContent='Report Downloaded';
+      if(status)status.textContent='Report has been downloaded.';
     }catch(err){
       console.error('Financial Independence report PDF generation failed',err);
-      els.reportBtn.textContent='PDF Failed - Try Again';
-      alert('The report could not be generated. Please refresh the page and try again.');
+      if(status)status.textContent='The report could not be generated. Please refresh the page and try again.';
     }finally{
       els.reportBtn.disabled=false;els.reportBtn.removeAttribute('aria-busy');
-      setTimeout(()=>{if(els.reportBtn.textContent!=='Preparing PDF...')els.reportBtn.textContent=original;},1800);
     }
   }
 

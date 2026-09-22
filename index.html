@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://carrowmont.com/financial-independence/" />
   <meta name="twitter:card" content="summary" />
   <meta name="theme-color" content="#0e827a" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20260922.4" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Carrowmont Financial Independence Planner","url":"https://carrowmont.com/financial-independence/","applicationCategory":"FinanceApplication","operatingSystem":"Any","description":"An educational financial-independence calculator for modelling a spending-based target, portfolio growth and target-age funding needs."}</script>
 </head>
 <body>
@@ -113,6 +113,7 @@
         <p id="fundingText">Your current plan is projected to cover about 35% of the modelled target at age 50.</p>
       </div>
       <div class="snapshot-actions"><button class="btn btn-outline" id="copyBtn" type="button">Copy Summary</button><button class="btn btn-primary" id="reportBtn" type="button">Generate Financial Independence Report</button></div>
+      <div class="report-download-status" id="reportDownloadStatus" role="status" aria-live="polite"></div>
       <p class="fineprint">Illustrative planning tool only. Results depend on the assumptions entered and do not guarantee investment outcomes or sustainable withdrawals.</p>
     </aside>
   </div>
@@ -186,8 +187,8 @@
 
 <script src="locale.js"></script>
 <script src="core.js"></script>
-<script src="pdf-export.js"></script>
-<script src="fi-pdf-renderer.js"></script>
-<script src="app.js"></script>
+<script src="pdf-export.js?v=20260922.4"></script>
+<script src="fi-pdf-renderer.js?v=20260922.4"></script>
+<script src="app.js?v=20260922.4"></script>
 </body>
 </html>
