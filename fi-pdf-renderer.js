@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const P=()=>window.CarrowmontPdfExport, L=()=>window.CarrowmontLocale, Core=()=>window.CarrowmontFICore;
+  const P=()=>window.CarrowmontPdfExport, L=()=>window.CarrowmontLocale, Core=()=>window.CarrowmontFICore, S=()=>window.CarrowmontReportStandard;
   const C={ink:'#102945',navy:'#102945',teal:'#0e8b80',tealDark:'#08756d',muted:'#405b75',line:'#c9d9e2',pale:'#e8f6f3',note:'#f3f8fa',amber:'#fff4d9',amberLine:'#edc86b',white:'#fff',light:'#f8fbfc'};
   const W=794,H=1123,M=42,CW=W-M*2;
   const money=v=>L().formatMoney(v,{maximumFractionDigits:0}), compact=v=>L().formatCompactMoney(v,{maximumFractionDigits:2}), pct=v=>`${Math.round(v*100)}%`;
@@ -26,21 +26,52 @@
     ages.forEach(age=>{const tp=Core().targetProjection(s,age),req=Core().requiredMonthly(s,age),selected=Math.abs(age-s.targetAge)<0.01;if(selected){ctx.fillStyle='#e9f6f3';ctx.fillRect(M,y,CW,42);}const vals=[`Age ${Math.round(age)}${selected?' (selected)':''}`,compact(tp.target),compact(tp.portfolio),`${money(req)}/mo`,`${Math.min(999,Math.round(tp.funding*100))}%`];x=M;vals.forEach((v,i)=>{const align=i===0?'left':'right',tx=align==='left'?x+8:x+cols[i]-8;P().text(ctx,v,tx,y+26,{size:9.1,weight:selected?850:650,color:i===4?C.tealDark:C.ink,align});x+=cols[i];});hline(ctx,M,M+CW,y+42);y+=42;});
     P().wrappedText(ctx,'Projected funding uses the current savings and investment plan before any increase to the monthly investment.',M,y+25,CW,{size:9,lineHeight:12.5,weight:500,color:C.muted,maxLines:2});return y+42;
   }
+  function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p,m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return m*p;}
+  function rawStateFromNormalized(s){return {...s,spendingPct:s.spendingPct*100,withdrawalRate:s.withdrawalRate*100,inflation:s.inflation*100,annualReturn:s.annualReturn*100,annualStepUp:s.annualStepUp*100};}
+  function chartPoint(age,value,minAge,maxAge,maxValue,imgX,imgY,imgW,imgH){const sx=82+((age-minAge)/Math.max(1e-9,maxAge-minAge))*(800-82-20),sy=72+(330-72-42)-(value/Math.max(1,maxValue))*(330-72-42);return{x:imgX+(sx/800)*imgW,y:imgY+(sy/330)*imgH};}
+  function chartValueLabel(ctx,p,label,color,offsetY){const w=132,h=28,x=Math.max(M+6,Math.min(W-M-w-6,p.x-w/2)),y=Math.max(294,Math.min(825,p.y+offsetY));card(ctx,x,y,w,h,C.white,color,7);ctx.beginPath();ctx.arc(p.x,p.y,3.2,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();P().text(ctx,label,x+w/2,y+18,{size:8.4,weight:850,color:C.ink,align:'center'});}
+  function drawSelectedAgeValues(ctx,r,which,imgX,imgY,imgW,imgH){const s=r.state;let endAge=Math.max(s.targetAge+5,s.currentAge+20);if(r.modelledFI.reached)endAge=Math.max(endAge,Math.ceil(r.modelledFI.age+2));endAge=Math.min(90,endAge);const points=Core().series(rawStateFromNormalized(s),endAge);if(which==='path'){const max=niceMax(Math.max(...points.flatMap(p=>[p.target,p.portfolio]))*1.08),tp=r.target;const a=chartPoint(s.targetAge,tp.target,s.currentAge,endAge,max,imgX,imgY,imgW,imgH),b=chartPoint(s.targetAge,tp.portfolio,s.currentAge,endAge,max,imgX,imgY,imgW,imgH);chartValueLabel(ctx,a,`Target ${compact(tp.target)}`,'#173d5c',-38);chartValueLabel(ctx,b,`Portfolio ${compact(tp.portfolio)}`,'#0e8b80',12);}else{const added=points.map(p=>({age:p.age,added:s.currentAssets+p.contributions,portfolio:p.portfolio})),max=niceMax(Math.max(...added.flatMap(p=>[p.added,p.portfolio]))*1.08),moneyAdded=s.currentAssets+r.target.contributions;const a=chartPoint(s.targetAge,moneyAdded,s.currentAge,endAge,max,imgX,imgY,imgW,imgH),b=chartPoint(s.targetAge,r.target.portfolio,s.currentAge,endAge,max,imgX,imgY,imgW,imgH);chartValueLabel(ctx,a,`Money added ${compact(moneyAdded)}`,'#8799aa',-38);chartValueLabel(ctx,b,`Portfolio ${compact(r.target.portfolio)}`,'#0e8b80',12);}}
   async function chartsPage(r){const pg=page(),ctx=pg.ctx;header(ctx);P().text(ctx,'Portfolio and target visuals',M,164,{size:19,weight:900,color:C.ink});P().wrappedText(ctx,'The charts compare the inflation-adjusted FI target with your current portfolio path, and show how much of the projected value comes from money added versus modelled investment growth.',M,188,CW,{size:9.5,lineHeight:13.5,weight:500,color:C.muted,maxLines:3});
     const c1=document.getElementById('pathChart'),c2=document.getElementById('growthChart');const w=CW,h=300;
     card(ctx,M,235,w,h,C.white,C.line,10);
     P().text(ctx,'FI target vs projected portfolio',M+12,258,{size:10,weight:850,color:C.ink});
     P().line(ctx,M+12,277,M+34,277,'#173d5c',3);P().text(ctx,'FI target',M+40,281,{size:8.8,weight:700,color:C.muted});
     P().line(ctx,M+126,277,M+148,277,'#0e8b80',3);P().text(ctx,'Projected portfolio',M+154,281,{size:8.8,weight:700,color:C.muted});
-    await P().drawSvgElement(ctx,c1,M+8,286,w-16,h-59);
+    await P().drawSvgElement(ctx,c1,M+8,286,w-16,h-59);drawSelectedAgeValues(ctx,r,'path',M+8,286,w-16,h-59);
     card(ctx,M,557,w,h,C.white,C.line,10);
     P().text(ctx,'Money added vs projected portfolio value',M+12,580,{size:10,weight:850,color:C.ink});
     P().line(ctx,M+12,599,M+34,599,'#8799aa',3);P().text(ctx,'Assets + contributions',M+40,603,{size:8.8,weight:700,color:C.muted});
     P().line(ctx,M+164,599,M+186,599,'#0e8b80',3);P().text(ctx,'Projected portfolio',M+192,603,{size:8.8,weight:700,color:C.muted});
-    await P().drawSvgElement(ctx,c2,M+8,608,w-16,h-59);
-    card(ctx,M,882,CW,156,C.note,C.line,10);P().text(ctx,'Methodology & important information',M+14,911,{size:15.5,weight:900,color:C.ink});hline(ctx,M+14,W-M-14,923,'#b9cbd5');P().wrappedText(ctx,'FI number today: Annual portfolio-funded spending divided by the planning withdrawal rate. Future FI target: today\'s FI number grown using the inflation assumption. Portfolio projection: existing invested assets grow using the entered return and monthly contributions are added at month-end, with the entered annual step-up. Monthly investment required: the starting monthly contribution that models to the selected-age target.',M+14,948,CW-28,{size:9.2,lineHeight:13,weight:500,color:C.muted,maxLines:6});P().wrappedText(ctx,'Important: The withdrawal rate is a planning assumption, not a guarantee or recommendation. The model does not determine investment suitability and does not model taxes, fees, sequence-of-returns risk or changing market returns.',M+14,1016,CW-28,{size:9.1,lineHeight:12.5,weight:600,color:C.ink,maxLines:3});
+    await P().drawSvgElement(ctx,c2,M+8,608,w-16,h-59);drawSelectedAgeValues(ctx,r,'growth',M+8,608,w-16,h-59);
+    P().wrappedText(ctx,`Printed value labels mark the selected age ${Math.round(r.state.targetAge)} so the chart can be read directly in the PDF without hover interactions.`,M,884,CW,{size:9.1,lineHeight:12.5,weight:500,color:C.muted,maxLines:2});
     return pg.canvas;}
-  function toolsPage(){const pg=page(),ctx=pg.ctx;P().text(ctx,'CARROWMONT',M,58,{size:15,weight:900,color:C.teal});P().text(ctx,'Continue planning with Carrowmont',M,101,{size:27,weight:900,color:C.ink});P().wrappedText(ctx,'Financial independence is one part of a broader financial plan. Try these Carrowmont tools to explore SIP investing, retirement, life goals and the effect of inflation.',M,130,CW,{size:11,lineHeight:16,weight:500,color:C.muted,maxLines:3});hline(ctx,M,W-M,178,C.navy,2);const tools=[{title:'SIP Calculator',desc:'Model SIP future value, calculate a SIP required for a goal, compare step-up SIP with fixed SIP, or estimate time to a target corpus.',url:'carrowmont.com/sip-calculator/'},{title:'Retirement Planner',desc:'Model retirement spending, income, current savings and the corpus that may be required for the retirement lifestyle you enter.',url:'carrowmont.com/retirement-calculator/'},{title:'Goal Planner',desc:'Plan for education, a home, travel, emergency savings and other financial goals using future-cost and investment assumptions.',url:'carrowmont.com/goal-planner/'},{title:'Inflation Calculator',desc:'See how inflation may change future costs and purchasing power across different time horizons and currencies.',url:'carrowmont.com/inflation-calculator/'}];const gap=16,cw=(CW-gap)/2,ch=162;tools.forEach((t,i)=>{const col=i%2,row=Math.floor(i/2),x=M+col*(cw+gap),y=210+row*(ch+18);card(ctx,x,y,cw,ch,C.white,C.line,13);P().text(ctx,t.title,x+16,y+32,{size:15,weight:900,color:C.ink});P().wrappedText(ctx,t.desc,x+16,y+59,cw-32,{size:10,lineHeight:14,weight:500,color:C.muted,maxLines:4});P().text(ctx,t.url,x+16,y+139,{size:9.5,weight:800,color:C.tealDark});});card(ctx,M,586,CW,78,C.pale,'#b8ddd8',12);P().text(ctx,'Explore all Carrowmont tools',M+16,616,{size:14,weight:900,color:C.tealDark});P().wrappedText(ctx,'Visit carrowmont.com to continue your planning. Carrowmont tools are educational illustrations and do not guarantee financial or investment outcomes.',M+16,641,CW-32,{size:9.7,lineHeight:13.5,weight:500,color:C.ink,maxLines:2});P().text(ctx,'CARROWMONT',M,H-40,{size:10,weight:900,color:C.teal});P().text(ctx,'Financial Planning, Tools & Learning - carrowmont.com',W-M,H-40,{size:9.3,weight:500,color:C.muted,align:'right'});return pg.canvas;}
+  function reportGuidePage(r){
+    return S().guidePage({
+      reportTitle:'Financial Independence Planning Report',
+      preparedFrom:'Carrowmont Financial Independence Planner',
+      howToRead:"Start with the FI number in today's money and the selected-age target. Then compare the projected portfolio, funding percentage, modelled FI timing and the monthly investment required under the entered assumptions.",
+      methodology:[
+        ['FI number today',"Annual portfolio-funded spending is divided by the planning withdrawal rate to produce a spending-based portfolio target in today's money."],
+        ['Future FI target',"The FI number today is grown to the selected age using the entered inflation assumption."],
+        ['Portfolio projection','Existing invested assets grow using the entered investment-return assumption. Monthly contributions are added at month-end and can increase once each year.'],
+        ['Required monthly investment','The starting monthly contribution that models to the selected-age FI target while applying the entered annual contribution increase.'],
+        ['Modelled FI timing','The first modelled month in which the projected portfolio reaches the inflation-adjusted FI target, checked up to age 90.']
+      ],
+      terminology:[
+        ['Planning withdrawal rate','A planning assumption used to translate annual portfolio-funded spending into an FI target. It is not a guaranteed or recommended withdrawal rate.'],
+        ['Portfolio-funded spending','The part of expected spending not covered by the recurring non-portfolio income entered.'],
+        ['Projected funding','Projected portfolio divided by the FI target at the selected age.'],
+        ['FI target','The spending-based portfolio target after applying the inflation assumption to the selected age.'],
+        ['Money added','Current invested assets plus modelled future contributions, before modelled investment growth.']
+      ],
+      assumptions:'Investment return, inflation and the planning withdrawal rate are constant modelling assumptions. The model does not include taxes, fees, sequence-of-returns risk or changing market returns.',
+      disclaimer:'The withdrawal rate is a planning assumption, not a guarantee or recommendation. This report does not determine investment suitability and is an educational illustration, not individualized investment, financial, tax, legal, accounting or insurance advice. Actual outcomes can differ materially.',
+      methodologyMeta:'Current Financial Independence methodology - reviewed September 2026',
+      methodologyUrl:'carrowmont.com/methodology.html',
+      contact:'contact@carrowmont.com'
+    });
+  }
+  function toolsPage(){return S().continuePlanningPage({currentTool:'fi',intro:`Financial independence is one part of a broader financial plan. Try these Carrowmont tools to explore ${S().investmentIdentity().planningPhrase}, retirement, life goals and the effect of inflation.`});}
   async function render(r){
     const p1=page(),ctx=p1.ctx;header(ctx);const s=r.state;
     P().text(ctx,'YOUR ESTIMATE',M,160,{size:9,weight:900,color:C.teal});P().text(ctx,'Financial independence snapshot',M,190,{size:22,weight:900,color:C.ink});
@@ -52,7 +83,7 @@
     P().wrappedText(ctx,r.additionalMonthly>0?`Under the entered assumptions, a starting monthly investment of about ${money(r.requiredMonthly)} may model to the selected FI target at age ${Math.round(s.targetAge)}. The current monthly investment is ${money(s.monthlyContribution)}.`:`Under the entered assumptions, the current monthly investment is at or above the modelled starting amount required for age ${Math.round(s.targetAge)}.`,M,ry+92,CW,{size:9.6,lineHeight:13.5,weight:500,color:C.muted,maxLines:3});
     const p2=page(),c2=p2.ctx;header(c2);let y=assumptions(c2,r,154)+26;y=scenarioTable(c2,r,y);card(c2,M,y+10,CW,108,C.note,C.line,10);P().text(c2,'How to interpret the target',M+14,y+40,{size:14.5,weight:900,color:C.ink});P().wrappedText(c2,`The selected-age target is expressed in future ${L().getCurrency()} after applying the inflation assumption for ${Math.max(0,s.targetAge-s.currentAge).toFixed(0)} years. The FI number in today\'s money is a spending-based planning target derived from the entered withdrawal rate.`,M+14,y+66,CW-28,{size:9.4,lineHeight:13.5,weight:500,color:C.muted,maxLines:3});
     const p3=await chartsPage(r);
-    return [p1.canvas,p2.canvas,p3,toolsPage()];
+    return [p1.canvas,p2.canvas,p3,reportGuidePage(r),toolsPage()];
   }
   window.CarrowmontFIPdfRenderer={render};
 })();
