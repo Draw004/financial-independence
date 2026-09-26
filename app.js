@@ -5,12 +5,29 @@
   const $=id=>document.getElementById(id);
   const els={
     localeMenu:$('localeMenu'),localeCurrent:$('localeCurrent'),regionSelect:$('regionSelect'),currencySelect:$('currencySelect'),localeDone:$('localeDone'),
-    currentAge:$('currentAge'),targetAge:$('targetAge'),monthlySpending:$('monthlySpending'),spendingPct:$('spendingPct'),monthlyIncome:$('monthlyIncome'),withdrawalRate:$('withdrawalRate'),inflation:$('inflation'),currentAssets:$('currentAssets'),monthlyContribution:$('monthlyContribution'),annualReturn:$('annualReturn'),annualStepUp:$('annualStepUp'),resetBtn:$('resetBtn'),
-    targetPill:$('targetPill'),fiToday:$('fiToday'),fiTodayNote:$('fiTodayNote'),modelledAge:$('modelledAge'),fiTargetAge:$('fiTargetAge'),portfolioTargetAge:$('portfolioTargetAge'),requiredMonthly:$('requiredMonthly'),additionalMonthly:$('additionalMonthly'),fundingPct:$('fundingPct'),fundingBar:$('fundingBar'),fundingText:$('fundingText'),copyBtn:$('copyBtn'),
+    currentAge:$('currentAge'),targetAge:$('targetAge'),monthlySpending:$('monthlySpending'),spendingPct:$('spendingPct'),monthlyIncome:$('monthlyIncome'),withdrawalRate:$('withdrawalRate'),inflation:$('inflation'),currentAssets:$('currentAssets'),monthlyContribution:$('monthlyContribution'),payFrequency:$('payFrequency'),investmentFrequency:$('investmentFrequency'),sameAsPayCycle:$('sameAsPayCycle'),currentInvestmentLabel:$('currentInvestmentLabel'),currentInvestmentHelp:$('currentInvestmentHelp'),annualReturn:$('annualReturn'),annualStepUp:$('annualStepUp'),resetBtn:$('resetBtn'),
+    targetPill:$('targetPill'),fiToday:$('fiToday'),fiTodayNote:$('fiTodayNote'),modelledAge:$('modelledAge'),fiTargetAge:$('fiTargetAge'),portfolioTargetAge:$('portfolioTargetAge'),requiredMonthly:$('requiredMonthly'),additionalMonthly:$('additionalMonthly'),requiredInvestmentLabel:$('requiredInvestmentLabel'),additionalInvestmentLabel:$('additionalInvestmentLabel'),fundingPct:$('fundingPct'),fundingBar:$('fundingBar'),fundingText:$('fundingText'),copyBtn:$('copyBtn'),
     netSpendCard:$('netSpendCard'),fiTodayCard:$('fiTodayCard'),fiTargetCard:$('fiTargetCard'),portfolioCard:$('portfolioCard'),pathChart:$('pathChart'),growthChart:$('growthChart'),visualEmpty:$('visualEmpty'),visualContent:$('visualContent'),insightsSection:$('insightsSection'),scenariosSection:$('scenariosSection'),
     insightMultiple:$('insightMultiple'),insightMultipleText:$('insightMultipleText'),insightInflation:$('insightInflation'),insightInflationText:$('insightInflationText'),insightTiming:$('insightTiming'),insightTimingText:$('insightTimingText'),insightAdjustment:$('insightAdjustment'),insightAdjustmentText:$('insightAdjustmentText'),scenarioGrid:$('scenarioGrid'),reportBtn:$('reportBtn')
   };
   let pendingRegion=L.getRegion(),pendingCurrency=L.getCurrency();
+  let payFrequencyUserOverride=false,investmentFrequencyUserOverride=false;
+  const frequencyOrder=['weekly','biweekly','semimonthly','fourweekly','monthly'];
+  const frequencyBaseLabels={weekly:'Weekly',semimonthly:'Twice Monthly',fourweekly:'Every 4 Weeks',monthly:'Monthly'};
+  function frequencyProfile(regionCode=L.getRegion()){return L.regions[regionCode]||L.regions.OTHER||{};}
+  function frequencyLabel(key,regionCode=L.getRegion()){
+    if(key==='biweekly'){const style=frequencyProfile(regionCode).twoWeekLabel||'neutral';if(style==='fortnightly')return 'Fortnightly (Every 2 Weeks)';if(style==='biweekly')return 'Biweekly (Every 2 Weeks)';return 'Every 2 Weeks';}
+    return frequencyBaseLabels[key]||'Monthly';
+  }
+  function defaultFrequencyForRegion(code=L.getRegion()){return frequencyProfile(code).contributionFrequency||'monthly';}
+  function cadenceText(key){if(key==='weekly')return 'per week';if(key==='biweekly')return 'every 2 weeks';if(key==='semimonthly')return 'twice monthly';if(key==='fourweekly')return 'every 4 weeks';return 'per month';}
+  function frequencyName(key){return frequencyLabel(key).replace(/\s*\(Every 2 Weeks\)\s*/,'').trim();}
+  function currentInvestmentLabelText(key){if(key==='biweekly'&&frequencyName(key)==='Every 2 Weeks')return 'Current investment every 2 weeks';if(key==='fourweekly')return 'Current investment every 4 weeks';return `Current ${frequencyName(key).toLowerCase()} investment`;}
+  function requiredInvestmentLabelText(key,prefix='Total'){if(key==='biweekly'&&frequencyName(key)==='Every 2 Weeks')return `${prefix} investment required every 2 weeks`;if(key==='fourweekly')return `${prefix} investment required every 4 weeks`;return `${prefix} ${frequencyName(key).toLowerCase()} investment required`;}
+  function contributionText(amount,key){return `${money(amount)} ${cadenceText(key)}`;}
+  function populateFrequencySelect(select,desired){if(!select)return;select.innerHTML=frequencyOrder.map(key=>`<option value="${key}">${frequencyLabel(key)}</option>`).join('');select.value=frequencyOrder.includes(desired)?desired:'monthly';}
+  function updateFrequencyCopy(){if(!els.investmentFrequency)return;const key=els.investmentFrequency.value||'monthly';if(els.currentInvestmentLabel)els.currentInvestmentLabel.textContent=currentInvestmentLabelText(key);if(els.currentInvestmentHelp)els.currentInvestmentHelp.textContent=`Enter how much you currently invest ${cadenceText(key)} toward Financial Independence.`;if(els.requiredInvestmentLabel)els.requiredInvestmentLabel.textContent=requiredInvestmentLabelText(key,'Total');if(els.additionalInvestmentLabel)els.additionalInvestmentLabel.textContent=requiredInvestmentLabelText(key,'Additional');}
+  function syncFrequencyOptions(){const suggested=defaultFrequencyForRegion();const payDesired=payFrequencyUserOverride?(els.payFrequency?.value||suggested):suggested;populateFrequencySelect(els.payFrequency,payDesired);const investDesired=els.sameAsPayCycle?.checked?els.payFrequency.value:(investmentFrequencyUserOverride?(els.investmentFrequency?.value||suggested):suggested);populateFrequencySelect(els.investmentFrequency,investDesired);if(els.sameAsPayCycle?.checked)els.investmentFrequency.value=els.payFrequency.value;if(els.investmentFrequency)els.investmentFrequency.disabled=Boolean(els.sameAsPayCycle?.checked);updateFrequencyCopy();}
   const num=(el,d=0)=>{const v=parseFloat(el.value);return Number.isFinite(v)?v:d;};
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const money=v=>L.formatMoney(v,{maximumFractionDigits:0});
@@ -31,15 +48,15 @@
   els.localeMenu.addEventListener('toggle',()=>{if(els.localeMenu.open){pendingRegion=L.getRegion();pendingCurrency=L.getCurrency();els.regionSelect.value=pendingRegion;els.currencySelect.value=pendingCurrency;}});
   els.regionSelect.addEventListener('change',e=>{pendingRegion=e.target.value;const p=L.regions[pendingRegion];if(p&&L.currencies[p.currency]){pendingCurrency=p.currency;els.currencySelect.value=pendingCurrency;}});
   els.currencySelect.addEventListener('change',e=>pendingCurrency=e.target.value);
-  els.localeDone.addEventListener('click',()=>{const changed=pendingRegion!==L.getRegion()||pendingCurrency!==L.getCurrency();L.setLocale(pendingRegion,pendingCurrency);els.localeMenu.open=false;if(changed) resetMoneyForLocale();});
+  els.localeDone.addEventListener('click',()=>{const regionChanged=pendingRegion!==L.getRegion(),changed=regionChanged||pendingCurrency!==L.getCurrency();if(regionChanged){payFrequencyUserOverride=false;investmentFrequencyUserOverride=false;}L.setLocale(pendingRegion,pendingCurrency);els.localeMenu.open=false;if(changed) resetMoneyForLocale();});
   document.addEventListener('click',e=>{if(els.localeMenu.open&&!els.localeMenu.contains(e.target))els.localeMenu.open=false;});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')els.localeMenu.open=false;});
-  window.addEventListener('carrowmont:localechange',()=>{updateLocaleSummary();render();});
+  window.addEventListener('carrowmont:localechange',()=>{updateLocaleSummary();syncFrequencyOptions();render();});
 
   function usesIndiaDemoDefaults(){return L.getRegion()==='IN'&&L.getCurrency()==='INR';}
   function resetMoneyForLocale(){els.monthlySpending.value=0;els.monthlyIncome.value=0;els.currentAssets.value=0;els.monthlyContribution.value=0;render();}
   function resetAll(){
-    els.currentAge.value=35;els.targetAge.value=50;els.monthlySpending.value=100000;els.spendingPct.value=100;els.monthlyIncome.value=0;els.withdrawalRate.value=4;els.inflation.value=5;els.currentAssets.value=1500000;els.monthlyContribution.value=30000;els.annualReturn.value=10;els.annualStepUp.value=5;
+    els.currentAge.value=35;els.targetAge.value=50;els.monthlySpending.value=100000;els.spendingPct.value=100;els.monthlyIncome.value=0;els.withdrawalRate.value=4;els.inflation.value=5;els.currentAssets.value=1500000;els.monthlyContribution.value=30000;els.annualReturn.value=10;els.annualStepUp.value=5;payFrequencyUserOverride=false;investmentFrequencyUserOverride=false;if(els.sameAsPayCycle)els.sameAsPayCycle.checked=false;syncFrequencyOptions();
     if(!usesIndiaDemoDefaults()) resetMoneyForLocale(); else render();
   }
   els.resetBtn.addEventListener('click',resetAll);
@@ -47,7 +64,7 @@
   function state(){
     const currentAge=Math.max(18,Math.min(80,num(els.currentAge,35)));
     const targetAge=Math.max(currentAge+1,Math.min(90,num(els.targetAge,currentAge+15)));
-    return {currentAge,targetAge,monthlySpending:num(els.monthlySpending),spendingPct:num(els.spendingPct,100),monthlyIncome:num(els.monthlyIncome),withdrawalRate:num(els.withdrawalRate,4),inflation:num(els.inflation,5),currentAssets:num(els.currentAssets),monthlyContribution:num(els.monthlyContribution),annualReturn:num(els.annualReturn,8),annualStepUp:num(els.annualStepUp)};
+    return {currentAge,targetAge,monthlySpending:num(els.monthlySpending),spendingPct:num(els.spendingPct,100),monthlyIncome:num(els.monthlyIncome),withdrawalRate:num(els.withdrawalRate,4),inflation:num(els.inflation,5),currentAssets:num(els.currentAssets),monthlyContribution:num(els.monthlyContribution),payFrequency:els.payFrequency?.value||'monthly',investmentFrequency:els.investmentFrequency?.value||'monthly',annualReturn:num(els.annualReturn,8),annualStepUp:num(els.annualStepUp)};
   }
 
   function commitTargetAge(){
@@ -95,7 +112,7 @@
     els.fiToday.textContent=compact(r.fiToday);
     els.fiTodayNote.textContent=`Based on ${money(r.portfolioMonthlyNeed)} per month of portfolio-funded spending and a ${(s.withdrawalRate*100).toFixed(1)}% withdrawal-rate assumption`;
     els.modelledAge.textContent=t.target<=0?'No portfolio target':(r.modelledFI.reached?`Age ${r.modelledFI.age.toFixed(r.modelledFI.months%12===0?0:1)}`:'Not reached by age 90');
-    els.fiTargetAge.textContent=compact(t.target);els.portfolioTargetAge.textContent=compact(t.portfolio);els.requiredMonthly.textContent=money(r.requiredMonthly);els.additionalMonthly.textContent=money(r.additionalMonthly);
+    updateFrequencyCopy();els.fiTargetAge.textContent=compact(t.target);els.portfolioTargetAge.textContent=compact(t.portfolio);els.requiredMonthly.textContent=money(r.requiredContribution);els.additionalMonthly.textContent=money(r.additionalContribution);
     const funded=Math.max(0,t.funding);els.fundingPct.textContent=pct(Math.min(funded,9.99));els.fundingBar.style.width=`${Math.min(100,funded*100)}%`;
     if(t.target<=0) els.fundingText.textContent='Under these inputs, recurring non-portfolio income covers the modelled spending amount, so the spending-based portfolio target is zero.';
     else if(funded>=1) els.fundingText.textContent=`Your current plan is projected to meet or exceed the modelled target at age ${Math.round(s.targetAge)} under these assumptions.`;
@@ -113,18 +130,18 @@
       els.insightTiming.textContent='No portfolio target';
       els.insightTimingText.textContent='Recurring non-portfolio income covers the modelled spending amount, so there is no spending-based portfolio target to reach.';
       els.insightAdjustment.textContent='No portfolio investment required';
-      els.insightAdjustmentText.textContent=`Because portfolio-funded spending is zero, the modelled starting monthly investment required for the target is ${money(0)}.`;
+      els.insightAdjustmentText.textContent=`Because portfolio-funded spending is zero, the modelled starting investment required ${cadenceText(s.investmentFrequency)} for the target is ${money(0)}.`;
     }else{
       els.insightTiming.textContent=r.modelledFI.reached?`Age ${r.modelledFI.age.toFixed(r.modelledFI.months%12===0?0:1)}`:'After age 90';
-      els.insightTimingText.textContent=r.modelledFI.reached?`This is the first modelled month when the projected portfolio reaches the inflation-adjusted target.`:'The current inputs do not reach the modelled target by age 90.';
-      els.insightAdjustment.textContent=r.additionalMonthly>0?`+${money(r.additionalMonthly)}/mo`:'No increase modelled';
-      els.insightAdjustmentText.textContent=r.additionalMonthly>0?`Starting monthly investment required for age ${Math.round(s.targetAge)} is ${money(r.requiredMonthly)}, before applying the annual step-up.`:`The current monthly investment is already at or above the modelled starting amount required for age ${Math.round(s.targetAge)}.`;
+      els.insightTimingText.textContent=r.modelledFI.reached?`This is the first modelled ${frequencyName(s.investmentFrequency).toLowerCase()} contribution period when the projected portfolio reaches the inflation-adjusted target.`:'The current inputs do not reach the modelled target by age 90.';
+      els.insightAdjustment.textContent=r.additionalContribution>0?`+${contributionText(r.additionalContribution,s.investmentFrequency)}`:'No increase modelled';
+      els.insightAdjustmentText.textContent=r.additionalContribution>0?`Starting investment required ${cadenceText(s.investmentFrequency)} for age ${Math.round(s.targetAge)} is ${money(r.requiredContribution)}, before applying the annual step-up.`:`The current investment ${cadenceText(s.investmentFrequency)} is already at or above the modelled starting amount required for age ${Math.round(s.targetAge)}.`;
     }
   }
 
   function renderScenarios(s){
     const ages=[Math.max(s.currentAge+1,s.targetAge-5),s.targetAge,Math.min(90,s.targetAge+5)].filter((v,i,a)=>a.indexOf(v)===i);
-    els.scenarioGrid.innerHTML=ages.map(age=>{const tp=C.targetProjection(s,age),req=C.requiredMonthly(s,age),add=Math.max(0,req-s.monthlyContribution),current=Math.abs(age-s.targetAge)<.001;return `<article class="scenario ${current?'current':''}"><span class="tag">${current?'Selected age':'Alternative age'}</span><strong class="big">Age ${Math.round(age)}</strong><dl><div><dt>FI target</dt><dd>${esc(compact(tp.target))}</dd></div><div><dt>Projected portfolio</dt><dd>${esc(compact(tp.portfolio))}</dd></div><div><dt>Starting monthly investment required</dt><dd>${esc(money(req))}</dd></div><div><dt>Additional vs current</dt><dd>${esc(money(add))}</dd></div></dl></article>`;}).join('');
+    els.scenarioGrid.innerHTML=ages.map(age=>{const tp=C.targetProjection(s,age),req=C.requiredContribution(s,age),add=Math.max(0,req-s.monthlyContribution),current=Math.abs(age-s.targetAge)<.001;return `<article class="scenario ${current?'current':''}"><span class="tag">${current?'Selected age':'Alternative age'}</span><strong class="big">Age ${Math.round(age)}</strong><dl><div><dt>FI target</dt><dd>${esc(compact(tp.target))}</dd></div><div><dt>Projected portfolio</dt><dd>${esc(compact(tp.portfolio))}</dd></div><div><dt>${esc(requiredInvestmentLabelText(s.investmentFrequency,'Starting'))}</dt><dd>${esc(money(req))}</dd></div><div><dt>Additional vs current</dt><dd>${esc(money(add))}</dd></div></dl></article>`;}).join('');
   }
 
   function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p,m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return m*p;}
@@ -180,7 +197,7 @@
     bindChart(els.growthChart,growthSeries,g2);
   }
 
-  async function copySummary(){const r=C.result(state()),s=r.state,txt=[`CARROWMONT FINANCIAL INDEPENDENCE SUMMARY`,``,`Country / region: ${L.getProfile().label}`,`Currency: ${L.getCurrency()}`,`Current age: ${s.currentAge}`,`Target age: ${s.targetAge}`,`Monthly spending today: ${money(s.monthlySpending)}`,`Expected spending at FI: ${(s.spendingPct*100).toFixed(0)}% of today`,`Monthly non-portfolio income at FI: ${money(s.monthlyIncome)}`,`Planning withdrawal rate: ${(s.withdrawalRate*100).toFixed(1)}%`,`Inflation assumption: ${(s.inflation*100).toFixed(1)}%`,`Expected investment return: ${(s.annualReturn*100).toFixed(1)}%`,`Annual contribution increase: ${(s.annualStepUp*100).toFixed(1)}%`,``,`Estimated FI number today: ${money(r.fiToday)}`,`FI target at age ${s.targetAge}: ${money(r.target.target)}`,`Projected portfolio at age ${s.targetAge}: ${money(r.target.portfolio)}`,`Starting monthly investment required: ${money(r.requiredMonthly)}`,`Additional monthly investment required: ${money(r.additionalMonthly)}`,`Modelled FI timing under current plan: ${r.target.target<=0?'No portfolio target':(r.modelledFI.reached?r.modelledFI.age.toFixed(1):'Not reached by age 90')}`,``,`Illustrative estimate only. The withdrawal rate is a planning assumption, not a guarantee or recommendation.`,`carrowmont.com`].join('\n');try{await navigator.clipboard.writeText(txt);els.copyBtn.textContent='Copied';setTimeout(()=>els.copyBtn.textContent='Copy Summary',1400);}catch(_){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}}
+  async function copySummary(){const r=C.result(state()),s=r.state,txt=[`CARROWMONT FINANCIAL INDEPENDENCE SUMMARY`,``,`Country / region: ${L.getProfile().label}`,`Currency: ${L.getCurrency()}`,`Current age: ${s.currentAge}`,`Target age: ${s.targetAge}`,`Monthly spending today: ${money(s.monthlySpending)}`,`Expected spending at FI: ${(s.spendingPct*100).toFixed(0)}% of today`,`Monthly non-portfolio income at FI: ${money(s.monthlyIncome)}`,`Planning withdrawal rate: ${(s.withdrawalRate*100).toFixed(1)}%`,`Inflation assumption: ${(s.inflation*100).toFixed(1)}%`,`Expected investment return: ${(s.annualReturn*100).toFixed(1)}%`,`Annual investment increase: ${(s.annualStepUp*100).toFixed(1)}%`,`Income / pay frequency: ${frequencyLabel(s.payFrequency)}`,`Investment frequency: ${frequencyLabel(s.investmentFrequency)}`,`${currentInvestmentLabelText(s.investmentFrequency)}: ${contributionText(s.monthlyContribution,s.investmentFrequency)}`,``,`Estimated FI number today: ${money(r.fiToday)}`,`FI target at age ${s.targetAge}: ${money(r.target.target)}`,`Projected portfolio at age ${s.targetAge}: ${money(r.target.portfolio)}`,`${requiredInvestmentLabelText(s.investmentFrequency,'Starting')}: ${contributionText(r.requiredContribution,s.investmentFrequency)}`,`${requiredInvestmentLabelText(s.investmentFrequency,'Additional')}: ${contributionText(r.additionalContribution,s.investmentFrequency)}`,`Modelled FI timing under current plan: ${r.target.target<=0?'No portfolio target':(r.modelledFI.reached?r.modelledFI.age.toFixed(1):'Not reached by age 90')}`,``,`Illustrative estimate only. The withdrawal rate is a planning assumption, not a guarantee or recommendation.`,`carrowmont.com`].join('\n');try{await navigator.clipboard.writeText(txt);els.copyBtn.textContent='Copied';setTimeout(()=>els.copyBtn.textContent='Copy Summary',1400);}catch(_){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}}
 
   async function generateFIReport(){
     const status=document.getElementById('reportDownloadStatus');
@@ -204,6 +221,10 @@
     }
   }
 
+  els.payFrequency?.addEventListener('change',()=>{payFrequencyUserOverride=true;if(els.sameAsPayCycle?.checked)els.investmentFrequency.value=els.payFrequency.value;updateFrequencyCopy();render();});
+  els.investmentFrequency?.addEventListener('change',()=>{investmentFrequencyUserOverride=true;updateFrequencyCopy();render();});
+  els.sameAsPayCycle?.addEventListener('change',()=>{if(els.sameAsPayCycle.checked){investmentFrequencyUserOverride=false;els.investmentFrequency.value=els.payFrequency.value;}else{investmentFrequencyUserOverride=true;}els.investmentFrequency.disabled=els.sameAsPayCycle.checked;updateFrequencyCopy();render();});
+
   els.copyBtn.addEventListener('click',copySummary);
   els.reportBtn.addEventListener('click',generateFIReport);
   document.querySelectorAll('input').forEach(i=>i.addEventListener('input',render));
@@ -221,6 +242,6 @@
     el.addEventListener('blur',()=>commitBoundedNumber(el,min,max,fallback));
   });
 
-  populateLocale();
+  populateLocale();syncFrequencyOptions();
   if(usesIndiaDemoDefaults()) render(); else resetMoneyForLocale();
 })();

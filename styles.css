@@ -24,3 +24,12 @@
   color:var(--teal-dark,#08756d);font-size:.82rem;font-weight:750;line-height:1.4;
 }
 .report-download-status:empty{margin-top:0;min-height:0;}
+
+/* Frequency controls */
+.field select{width:100%;border:1px solid #c8d9e3;border-radius:12px;padding:12px;background:#fff;color:var(--ink);font:inherit;font-weight:800;outline:none}
+.field select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,139,128,.11)}
+.field select:disabled{background:#f3f7f9;color:#6d7f92;cursor:not-allowed}
+.frequency-link-field{display:flex;flex-direction:column;justify-content:center}
+.frequency-link-field .check-row{margin-top:12px}
+.check-row{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer}
+.check-row input{width:18px;height:18px;min-width:18px;margin:0;accent-color:var(--teal)}
