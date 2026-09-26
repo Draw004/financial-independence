@@ -278,6 +278,10 @@
 
   function renderScenarios(r){
     const s=r.state,targetPlus5=Math.min(90,s.targetAge+5),isUntil=s.planningMode==='until_age',targetLabel=isUntil?'Required portfolio':'FI target';
+    const scenarioHead=document.querySelector('#scenariosSection .section-head h2'),scenarioIntro=document.querySelector('#scenariosSection .section-head p');
+    if(scenarioHead)scenarioHead.textContent=isUntil?'Today and your Target Age':'Today, your Target Age and Target Age +5';
+    if(scenarioIntro)scenarioIntro.textContent=isUntil?`These checkpoints show where the plan starts and where the projected portfolio stands at Target Age. Post-FI longevity through age ${Math.round(s.planUntilAge)} is shown separately in Plan Longevity.`:'These checkpoints keep the selected Target Age central while showing where the current plan starts and where it may stand five years later.';
+    if(els.scenarioGrid)els.scenarioGrid.classList.toggle('plan-until-grid',isUntil);
     const checkpoints=(isUntil?[{age:s.currentAge,label:'Today',kind:'today'},{age:s.targetAge,label:'Target Age',kind:'target'}]:[{age:s.currentAge,label:'Today',kind:'today'},{age:s.targetAge,label:'Target Age',kind:'target'},{age:targetPlus5,label:'Target Age +5',kind:'plus5'}]).filter((v,i,a)=>a.findIndex(x=>Math.abs(x.age-v.age)<.001)===i);
     els.scenarioGrid.innerHTML=checkpoints.map(cp=>{
       const tp=C.targetProjection(s,cp.age),req=cp.kind==='today'?null:C.requiredContribution(s,cp.age),portfolioLabel=cp.kind==='today'?'Current Portfolio Value':'Projected Portfolio Value';
