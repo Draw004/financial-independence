@@ -147,6 +147,42 @@
     };
   }
 
+
+  function annualJourney(raw,endAge){
+    const s=normalize(raw);
+    const fi=modelledFI(s);
+    let maxAge=Math.min(90,Math.max(s.targetAge+5,Number.isFinite(endAge)?endAge:s.targetAge+5));
+    if(fi.reached&&Number.isFinite(fi.age)) maxAge=Math.min(90,Math.max(maxAge,Math.ceil(fi.age)));
+    if(!fi.reached) maxAge=90;
+    const rows=[];
+    let priorContributions=0;
+    const finalWholeAge=Math.floor(maxAge);
+    for(let age=Math.ceil(s.currentAge+1);age<=finalWholeAge;age++){
+      const years=age-s.currentAge;
+      const p=portfolioAtYears(s,years);
+      const investmentThatYear=Math.max(0,p.contributions-priorContributions);
+      priorContributions=p.contributions;
+      const target=fiTargetAtYears(s,years);
+      const funding=target>0?p.portfolio/target:1;
+      const reachedDuringYear=Boolean(fi.reached&&fi.age>age-1&&fi.age<=age+1e-9);
+      rows.push({
+        year:Math.max(1,Math.round(years)),
+        age,
+        years,
+        investmentThatYear,
+        totalMoneyAdded:s.currentAssets+p.contributions,
+        contributions:p.contributions,
+        growth:p.growth,
+        portfolio:p.portfolio,
+        target,
+        funding,
+        isTargetAge:Math.abs(age-s.targetAge)<1e-9,
+        reachedDuringYear
+      });
+    }
+    return {rows,endAge:maxAge,modelledFI:fi};
+  }
+
   function series(raw,endAge){
     const s=normalize(raw);
     const maxAge=Math.min(90,Math.max(s.currentAge+1,endAge||s.targetAge));
@@ -162,5 +198,5 @@
     return out;
   }
 
-  return {frequencyPeriods,periodsPerYear,periodicRate,normalize,monthlyRate,fiTargetToday,fiTargetAtYears,contributionForPeriod,contributionForMonth,portfolioAtPeriods,portfolioAtMonths,portfolioAtYears,modelledFI,targetProjection,requiredContribution,requiredMonthly,result,series};
+  return {frequencyPeriods,periodsPerYear,periodicRate,normalize,monthlyRate,fiTargetToday,fiTargetAtYears,contributionForPeriod,contributionForMonth,portfolioAtPeriods,portfolioAtMonths,portfolioAtYears,modelledFI,targetProjection,requiredContribution,requiredMonthly,result,annualJourney,series};
 });

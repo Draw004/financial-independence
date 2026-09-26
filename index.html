@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://carrowmont.com/financial-independence/" />
   <meta name="twitter:card" content="summary" />
   <meta name="theme-color" content="#0e827a" />
-  <link rel="stylesheet" href="styles.css?v=20260926.1" />
+  <link rel="stylesheet" href="styles.css?v=20260927.1" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Carrowmont Financial Independence Planner","url":"https://carrowmont.com/financial-independence/","applicationCategory":"FinanceApplication","operatingSystem":"Any","description":"An educational financial-independence calculator for modelling a spending-based target, portfolio growth and target-age funding needs."}</script>
 </head>
 <body>
@@ -132,14 +132,37 @@
       <div class="summary-row">
         <div><span>Portfolio-funded spending today</span><strong id="netSpendCard">₹1,00,000/mo</strong></div>
         <div><span>FI number today</span><strong id="fiTodayCard">₹3 Cr</strong></div>
-        <div><span>FI target at selected age · future money</span><strong id="fiTargetCard">₹6.24 Cr</strong></div>
-        <div><span>Projected portfolio at selected age · future money</span><strong id="portfolioCard">₹2.21 Cr</strong></div>
+        <div><span>FI target at Target Age · future money</span><strong id="fiTargetCard">₹6.24 Cr</strong></div>
+        <div><span>Projected portfolio at Target Age · future money</span><strong id="portfolioCard">₹2.21 Cr</strong></div>
       </div>
       <div class="chart-grid">
-        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">TARGET VS PORTFOLIO</div><h3>When the two paths may meet</h3></div><p>Hover or tap to inspect ages and values.</p></div><svg id="pathChart" viewBox="0 0 800 330" role="img" aria-label="Financial independence target versus projected portfolio chart"></svg></article>
-        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">PORTFOLIO BUILD</div><h3>Money added vs projected value</h3></div><p>Compare cumulative money added with the modelled portfolio value.</p></div><svg id="growthChart" viewBox="0 0 800 330" role="img" aria-label="Cumulative invested money versus projected portfolio value chart"></svg></article>
+        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">TARGET VS PORTFOLIO</div><h3>FI target vs projected portfolio value</h3></div><p>Target Age and the actual FI crossing are marked directly on the chart.</p></div><svg id="pathChart" viewBox="0 0 800 360" role="img" aria-label="Financial independence target versus projected portfolio value chart"></svg></article>
+        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">PORTFOLIO BUILD</div><h3>Money added vs projected portfolio value</h3></div><p>See how contributions and modelled investment growth combine over time.</p></div><svg id="growthChart" viewBox="0 0 800 360" role="img" aria-label="Money added versus projected portfolio value chart"></svg></article>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="journey" id="fiJourney">
+  <div class="container">
+    <div class="section-head wide"><div><div class="eyebrow">FINANCIAL INDEPENDENCE JOURNEY</div><h2>See how your FI path changes year by year</h2></div><p>Annual snapshots show what you add, the modelled growth, the projected portfolio, the FI target and how much of that target is funded.</p></div>
+    <div class="journey-summary" id="journeySummary">
+      <div><span>Total money added at Target Age</span><strong id="journeyMoneyAdded">—</strong><small>Current invested assets plus modelled contributions.</small></div>
+      <div><span>Modelled investment growth at Target Age</span><strong id="journeyGrowth">—</strong><small>Projected portfolio above total money added.</small></div>
+      <div><span>Projected portfolio value at Target Age</span><strong id="journeyPortfolio">—</strong><small>Based on the entered return and investment assumptions.</small></div>
+      <div><span>Funding at Target Age</span><strong id="journeyFunding">—</strong><small>Projected portfolio divided by the FI target.</small></div>
+    </div>
+    <div class="journey-milestones" id="journeyMilestones"></div>
+    <details class="journey-details" id="journeyDetails">
+      <summary><span>View full yearly breakdown</span><small id="journeyCount"></small></summary>
+      <div class="table-scroll">
+        <table class="journey-table">
+          <thead><tr><th>Age / year</th><th>Investment that year</th><th>Total money added</th><th>Modelled investment growth</th><th>Projected portfolio value</th><th>FI target</th><th>Funding %</th></tr></thead>
+          <tbody id="journeyBody"></tbody>
+        </table>
+      </div>
+      <p class="journey-note" id="journeyNote"></p>
+    </details>
   </div>
 </section>
 
@@ -157,7 +180,7 @@
 
 <section class="scenarios" id="scenariosSection">
   <div class="container">
-    <div class="section-head wide"><div><div class="eyebrow">WHAT IF?</div><h2>Compare target ages</h2></div><p>Same spending, return, inflation and contribution-growth assumptions; only the target age changes. Values shown are future nominal amounts at each age.</p></div>
+    <div class="section-head wide"><div><div class="eyebrow">KEY CHECKPOINTS</div><h2>Today, your Target Age and Target Age +5</h2></div><p>These checkpoints keep the selected Target Age central while showing where the current plan starts and where it may stand five years later.</p></div>
     <div class="scenario-grid" id="scenarioGrid"></div>
   </div>
 </section>
@@ -177,7 +200,7 @@
       <p><strong>FI number today:</strong> Annual portfolio-funded spending ÷ planning withdrawal rate.</p>
       <p><strong>Future FI target:</strong> Today’s FI number × (1 + inflation assumption)<sup>years</sup>. Recurring non-portfolio income entered in today’s money is therefore treated as retaining the same real purchasing power.</p>
       <p><strong>Portfolio projection:</strong> Existing invested assets grow using the periodic rate implied by the annual return and selected investment frequency. Contributions are added once per selected investment period and can increase once each year by the entered step-up rate.</p>
-      <p><strong>Modelled FI age:</strong> The first modelled contribution period when the projected portfolio equals or exceeds the inflation-adjusted FI target, checked through age 90.</p>
+      <p><strong>Modelled FI age:</strong> The first modelled contribution period when the projected portfolio equals or exceeds the inflation-adjusted FI target, checked through age 90 and displayed in years and months.</p><p><strong>Financial Independence Journey:</strong> The year-by-year section is an annual summary of the same underlying frequency-based model. It does not replace or simplify the approved calculation frequency.</p>
       <p><strong>Recurring investment required:</strong> The starting contribution at the selected investment frequency that would model to the selected-age target while applying the entered annual step-up. It is solved numerically.</p>
       <p class="method-note"><strong>Important:</strong> The withdrawal rate is only a planning assumption. The model does not determine whether a withdrawal rate is safe or suitable, and it does not model market sequence risk, taxes, fees, asset allocation, changing returns, longevity, or future policy changes unless those effects are reflected in your inputs.</p>
     </div>
@@ -187,12 +210,12 @@
 
 <footer class="site-footer"><div class="container footer-grid"><div><strong>CARROWMONT</strong><p>Financial planning tools and educational resources for clearer financial decisions.</p></div><div><strong>Tools</strong><a href="/retirement-calculator/">Retirement Planner</a><a href="/inflation-calculator/">Inflation Calculator</a><a href="/goal-planner/">Goal Planner</a><a href="/financial-independence/">Financial Independence</a><a href="/#tools">All tools</a></div><div><strong>Carrowmont</strong><a href="/learn.html">Learn</a><a href="/about.html">About</a><a href="/methodology.html">Methodology</a><a href="/contact.html">Contact</a></div><div><strong>Legal</strong><a href="/disclaimer.html">Disclaimer</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div></div><div class="container footer-bottom"><span>© 2026 Carrowmont</span><span>Illustrative estimates, not financial advice.</span></div></footer>
 
-<script src="locale.js?v=20260926.1"></script>
-<script src="core.js?v=20260926.1"></script>
+<script src="locale.js?v=20260927.1"></script>
+<script src="core.js?v=20260927.1"></script>
 <script src="pdf-export.js?v=20260922.4"></script>
 <script src="report-standard.js?v=20260925.2"></script>
-<script src="fi-pdf-renderer.js?v=20260926.1"></script>
-<script src="app.js?v=20260926.1"></script>
+<script src="fi-pdf-renderer.js?v=20260927.1"></script>
+<script src="app.js?v=20260927.1"></script>
 <script src="analytics.js?v=1.0.1" data-carrowmont-tool="financial_independence" data-track-tool-open="true"></script>
 </body>
 </html>
