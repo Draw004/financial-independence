@@ -8,7 +8,7 @@
     currentAge:$('currentAge'),targetAge:$('targetAge'),monthlySpending:$('monthlySpending'),spendingPct:$('spendingPct'),monthlyIncome:$('monthlyIncome'),withdrawalRate:$('withdrawalRate'),inflation:$('inflation'),currentAssets:$('currentAssets'),monthlyContribution:$('monthlyContribution'),payFrequency:$('payFrequency'),investmentFrequency:$('investmentFrequency'),sameAsPayCycle:$('sameAsPayCycle'),currentInvestmentLabel:$('currentInvestmentLabel'),currentInvestmentHelp:$('currentInvestmentHelp'),annualReturn:$('annualReturn'),annualStepUp:$('annualStepUp'),resetBtn:$('resetBtn'),
     targetPill:$('targetPill'),fiToday:$('fiToday'),fiTodayNote:$('fiTodayNote'),modelledAge:$('modelledAge'),fiTargetAge:$('fiTargetAge'),portfolioTargetAge:$('portfolioTargetAge'),requiredMonthly:$('requiredMonthly'),additionalMonthly:$('additionalMonthly'),requiredInvestmentLabel:$('requiredInvestmentLabel'),additionalInvestmentLabel:$('additionalInvestmentLabel'),fundingPct:$('fundingPct'),fundingBar:$('fundingBar'),fundingText:$('fundingText'),copyBtn:$('copyBtn'),
     netSpendCard:$('netSpendCard'),fiTodayCard:$('fiTodayCard'),fiTargetCard:$('fiTargetCard'),portfolioCard:$('portfolioCard'),pathChart:$('pathChart'),growthChart:$('growthChart'),visualEmpty:$('visualEmpty'),visualContent:$('visualContent'),insightsSection:$('insightsSection'),scenariosSection:$('scenariosSection'),
-    insightMultiple:$('insightMultiple'),insightMultipleText:$('insightMultipleText'),insightInflation:$('insightInflation'),insightInflationText:$('insightInflationText'),insightTiming:$('insightTiming'),insightTimingText:$('insightTimingText'),insightAdjustment:$('insightAdjustment'),insightAdjustmentText:$('insightAdjustmentText'),scenarioGrid:$('scenarioGrid'),reportBtn:$('reportBtn')
+    insightMultiple:$('insightMultiple'),insightMultipleText:$('insightMultipleText'),insightInflation:$('insightInflation'),insightInflationText:$('insightInflationText'),insightTiming:$('insightTiming'),insightTimingText:$('insightTimingText'),insightAdjustment:$('insightAdjustment'),insightAdjustmentText:$('insightAdjustmentText'),scenarioGrid:$('scenarioGrid'),fiJourney:$('fiJourney'),journeyMoneyAdded:$('journeyMoneyAdded'),journeyGrowth:$('journeyGrowth'),journeyPortfolio:$('journeyPortfolio'),journeyFunding:$('journeyFunding'),journeyMilestones:$('journeyMilestones'),journeyDetails:$('journeyDetails'),journeyCount:$('journeyCount'),journeyBody:$('journeyBody'),journeyNote:$('journeyNote'),reportBtn:$('reportBtn')
   };
   let pendingRegion=L.getRegion(),pendingCurrency=L.getCurrency();
   let payFrequencyUserOverride=false,investmentFrequencyUserOverride=false;
@@ -33,6 +33,22 @@
   const money=v=>L.formatMoney(v,{maximumFractionDigits:0});
   const compact=v=>L.formatCompactMoney(v,{maximumFractionDigits:2});
   const pct=v=>`${Math.round(v*100)}%`;
+
+
+  function modelledAgeText(r,compactMode=false){
+    if(r.target.target<=0) return 'No portfolio target';
+    if(!r.modelledFI.reached) return 'FI target not reached within the modelled period.';
+    const totalMonths=Math.max(0,Math.round(r.state.currentAge*12)+(r.modelledFI.months||0));
+    const years=Math.floor(totalMonths/12),months=totalMonths%12;
+    if(compactMode) return `Age ${years}y ${months}m`;
+    return `Age ${years} years ${months} month${months===1?'':'s'}`;
+  }
+  function chartEndAge(r){
+    const s=r.state;
+    if(r.target.target<=0) return Math.min(90,s.targetAge+5);
+    if(r.modelledFI.reached) return Math.min(90,Math.max(s.targetAge+5,Math.ceil(r.modelledFI.age+1)));
+    return 90;
+  }
 
   function populateLocale(){
     const regionEntries=Object.entries(L.regions).sort(([codeA,a],[codeB,b])=>{
@@ -98,7 +114,7 @@
     const raw=state(),r=C.result(raw),s=r.state,t=r.target;
     const empty=s.monthlySpending<=0&&s.monthlyIncome<=0&&s.currentAssets<=0&&s.monthlyContribution<=0;
     els.targetPill.textContent=`Target age ${Math.round(s.targetAge)}`;
-    els.visualEmpty.hidden=!empty;els.visualContent.hidden=empty;els.insightsSection.hidden=empty;els.scenariosSection.hidden=empty;
+    els.visualEmpty.hidden=!empty;els.visualContent.hidden=empty;els.insightsSection.hidden=empty;els.scenariosSection.hidden=empty;if(els.fiJourney)els.fiJourney.hidden=empty;
     if(empty){
       els.fiToday.textContent='—';
       els.fiTodayNote.textContent='Enter your spending and investment details to build an illustrative financial-independence estimate.';
@@ -106,20 +122,20 @@
       els.fiTargetAge.textContent='—';els.portfolioTargetAge.textContent='—';els.requiredMonthly.textContent='—';els.additionalMonthly.textContent='—';
       els.fundingPct.textContent='—';els.fundingBar.style.width='0%';
       els.fundingText.textContent='Your funding estimate will appear after you add spending or investment details.';
-      els.pathChart.innerHTML='';els.growthChart.innerHTML='';els.scenarioGrid.innerHTML='';
+      els.pathChart.innerHTML='';els.growthChart.innerHTML='';els.scenarioGrid.innerHTML='';if(els.journeyBody)els.journeyBody.innerHTML='';
       return;
     }
     els.fiToday.textContent=compact(r.fiToday);
     els.fiTodayNote.textContent=`Based on ${money(r.portfolioMonthlyNeed)} per month of portfolio-funded spending and a ${(s.withdrawalRate*100).toFixed(1)}% withdrawal-rate assumption`;
-    els.modelledAge.textContent=t.target<=0?'No portfolio target':(r.modelledFI.reached?`Age ${r.modelledFI.age.toFixed(r.modelledFI.months%12===0?0:1)}`:'Not reached by age 90');
+    els.modelledAge.textContent=modelledAgeText(r);
     updateFrequencyCopy();els.fiTargetAge.textContent=compact(t.target);els.portfolioTargetAge.textContent=compact(t.portfolio);els.requiredMonthly.textContent=money(r.requiredContribution);els.additionalMonthly.textContent=money(r.additionalContribution);
     const funded=Math.max(0,t.funding);els.fundingPct.textContent=pct(Math.min(funded,9.99));els.fundingBar.style.width=`${Math.min(100,funded*100)}%`;
     if(t.target<=0) els.fundingText.textContent='Under these inputs, recurring non-portfolio income covers the modelled spending amount, so the spending-based portfolio target is zero.';
-    else if(funded>=1) els.fundingText.textContent=`Your current plan is projected to meet or exceed the modelled target at age ${Math.round(s.targetAge)} under these assumptions.`;
-    else els.fundingText.textContent=`Your current plan is projected to cover about ${Math.round(funded*100)}% of the modelled target at age ${Math.round(s.targetAge)}.`;
+    else if(funded>=1) els.fundingText.textContent=`Your current plan is projected to meet or exceed the modelled target at Target Age ${Math.round(s.targetAge)} under these assumptions.`;
+    else els.fundingText.textContent=`Your current plan is projected to cover about ${Math.round(funded*100)}% of the modelled target at Target Age ${Math.round(s.targetAge)}.`;
 
     els.netSpendCard.textContent=`${money(r.portfolioMonthlyNeed)}/mo`;els.fiTodayCard.textContent=compact(r.fiToday);els.fiTargetCard.textContent=compact(t.target);els.portfolioCard.textContent=compact(t.portfolio);
-    renderInsights(r);renderScenarios(s);renderCharts(r,raw);
+    renderInsights(r);renderScenarios(r);renderCharts(r,raw);renderJourney(r,raw);
   }
 
   function renderInsights(r){
@@ -132,20 +148,24 @@
       els.insightAdjustment.textContent='No portfolio investment required';
       els.insightAdjustmentText.textContent=`Because portfolio-funded spending is zero, the modelled starting investment required ${cadenceText(s.investmentFrequency)} for the target is ${money(0)}.`;
     }else{
-      els.insightTiming.textContent=r.modelledFI.reached?`Age ${r.modelledFI.age.toFixed(r.modelledFI.months%12===0?0:1)}`:'After age 90';
-      els.insightTimingText.textContent=r.modelledFI.reached?`This is the first modelled ${frequencyName(s.investmentFrequency).toLowerCase()} contribution period when the projected portfolio reaches the inflation-adjusted target.`:'The current inputs do not reach the modelled target by age 90.';
+      els.insightTiming.textContent=modelledAgeText(r);
+      els.insightTimingText.textContent=r.modelledFI.reached?`This is the first modelled ${frequencyName(s.investmentFrequency).toLowerCase()} contribution period when the projected portfolio reaches the inflation-adjusted target.`:'FI target not reached within the modelled period through age 90.';
       els.insightAdjustment.textContent=r.additionalContribution>0?`+${contributionText(r.additionalContribution,s.investmentFrequency)}`:'No increase modelled';
       els.insightAdjustmentText.textContent=r.additionalContribution>0?`Starting investment required ${cadenceText(s.investmentFrequency)} for age ${Math.round(s.targetAge)} is ${money(r.requiredContribution)}, before applying the annual step-up.`:`The current investment ${cadenceText(s.investmentFrequency)} is already at or above the modelled starting amount required for age ${Math.round(s.targetAge)}.`;
     }
   }
 
-  function renderScenarios(s){
-    const ages=[Math.max(s.currentAge+1,s.targetAge-5),s.targetAge,Math.min(90,s.targetAge+5)].filter((v,i,a)=>a.indexOf(v)===i);
-    els.scenarioGrid.innerHTML=ages.map(age=>{const tp=C.targetProjection(s,age),req=C.requiredContribution(s,age),add=Math.max(0,req-s.monthlyContribution),current=Math.abs(age-s.targetAge)<.001;return `<article class="scenario ${current?'current':''}"><span class="tag">${current?'Selected age':'Alternative age'}</span><strong class="big">Age ${Math.round(age)}</strong><dl><div><dt>FI target</dt><dd>${esc(compact(tp.target))}</dd></div><div><dt>Projected portfolio</dt><dd>${esc(compact(tp.portfolio))}</dd></div><div><dt>${esc(requiredInvestmentLabelText(s.investmentFrequency,'Starting'))}</dt><dd>${esc(money(req))}</dd></div><div><dt>Additional vs current</dt><dd>${esc(money(add))}</dd></div></dl></article>`;}).join('');
+  function renderScenarios(r){
+    const s=r.state,targetPlus5=Math.min(90,s.targetAge+5);
+    const checkpoints=[{age:s.currentAge,label:'Today',kind:'today'},{age:s.targetAge,label:'Target Age',kind:'target'},{age:targetPlus5,label:'Target Age +5',kind:'plus5'}].filter((v,i,a)=>a.findIndex(x=>Math.abs(x.age-v.age)<.001)===i);
+    els.scenarioGrid.innerHTML=checkpoints.map(cp=>{
+      const tp=C.targetProjection(s,cp.age),req=cp.kind==='today'?null:C.requiredContribution(s,cp.age),portfolioLabel=cp.kind==='today'?'Current Portfolio Value':'Projected Portfolio Value';
+      return `<article class="scenario ${cp.kind==='target'?'target-age':''}"><span class="tag">${esc(cp.label)}</span><strong class="big">Age ${Math.round(cp.age)}</strong><dl><div><dt>FI target</dt><dd>${esc(compact(tp.target))}</dd></div><div><dt>${esc(portfolioLabel)}</dt><dd>${esc(compact(tp.portfolio))}</dd></div><div><dt>Funding</dt><dd>${esc(pct(Math.min(9.99,tp.funding)))}</dd></div><div><dt>${esc(requiredInvestmentLabelText(s.investmentFrequency,'Starting'))}</dt><dd>${req===null?'—':esc(money(req))}</dd></div></dl></article>`;
+    }).join('');
   }
 
   function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p,m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return m*p;}
-  function chartBase(svg,maxVal,minAge,maxAge){const W=800,H=330,l=82,r=20,t=72,b=42;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const iw=W-l-r,ih=H-t-b,x=age=>l+((age-minAge)/(maxAge-minAge))*iw,yy=v=>t+ih-(v/maxVal)*ih;let h='';for(let i=0;i<=4;i++){const v=maxVal*i/4,py=yy(v);h+=`<line class="gridline" x1="${l}" x2="${W-r}" y1="${py}" y2="${py}"/><text class="axis" x="${l-10}" y="${py+4}" text-anchor="end">${esc(compact(v))}</text>`;}[minAge,(minAge+maxAge)/2,maxAge].forEach(age=>h+=`<text class="axis" x="${x(age)}" y="${H-14}" text-anchor="middle">Age ${Math.round(age)}</text>`);svg.innerHTML=h;return{x,yy,W,H,l,r,t,b,iw,ih,minAge,maxAge};}
+  function chartBase(svg,maxVal,minAge,maxAge){const W=800,H=360,l=82,r=20,t=92,b=44;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const iw=W-l-r,ih=H-t-b,x=age=>l+((age-minAge)/(maxAge-minAge))*iw,yy=v=>t+ih-(v/maxVal)*ih;let h='';for(let i=0;i<=4;i++){const v=maxVal*i/4,py=yy(v);h+=`<line class="gridline" x1="${l}" x2="${W-r}" y1="${py}" y2="${py}"/><text class="axis" x="${l-10}" y="${py+4}" text-anchor="end">${esc(compact(v))}</text>`;}[minAge,(minAge+maxAge)/2,maxAge].forEach(age=>h+=`<text class="axis" x="${x(age)}" y="${H-14}" text-anchor="middle">Age ${Math.round(age)}</text>`);svg.innerHTML=h;return{x,yy,W,H,l,r,t,b,iw,ih,minAge,maxAge};}
   function bindChart(svg,series,g){
     const card=svg.closest('.chart-card');let tip=card.querySelector('.fi-chart-tooltip');if(!tip){tip=document.createElement('div');tip.className='fi-chart-tooltip';tip.setAttribute('aria-hidden','true');card.appendChild(tip);}let guide=document.createElementNS('http://www.w3.org/2000/svg','line');guide.setAttribute('class','fi-chart-guide');guide.setAttribute('y1',g.t);guide.setAttribute('y2',g.H-g.b);guide.setAttribute('visibility','hidden');svg.appendChild(guide);const dots=series.map(ser=>{const d=document.createElementNS('http://www.w3.org/2000/svg','circle');d.setAttribute('class','fi-chart-hover-dot');d.setAttribute('r','5');d.setAttribute('fill',ser.color);d.setAttribute('visibility','hidden');svg.appendChild(d);return d;});
     const hide=()=>{tip.classList.remove('visible');tip.setAttribute('aria-hidden','true');guide.setAttribute('visibility','hidden');dots.forEach(d=>d.setAttribute('visibility','hidden'));};let touchPinned=false;
@@ -155,49 +175,71 @@
   }
   function path(points,g,key){return points.map((p,i)=>`${i?'L':'M'}${g.x(p.age)},${g.yy(p[key])}`).join(' ');}
 
-  function addStaticChartValues(svg,g,ages,series){
+  function checkpointTitle(age,s){if(Math.abs(age-s.currentAge)<.01)return `Today · Age ${Math.round(age)}`;if(Math.abs(age-s.targetAge)<.01)return `Target Age ${Math.round(age)}`;if(Math.abs(age-Math.min(90,s.targetAge+5))<.01)return `Target +5 · Age ${Math.round(age)}`;return `Age ${Math.round(age)}`;}
+  function addStaticChartValues(svg,g,ages,series,s){
     const unique=[];ages.forEach(a=>{if(!unique.some(v=>Math.abs(v-a)<.5))unique.push(a);});
     const nearest=(pts,age)=>pts.reduce((best,p)=>Math.abs(p.age-age)<Math.abs(best.age-age)?p:best,pts[0]);
-    const boxW=204,boxH=50,boxY=8;
+    const boxW=230,boxH=62,boxY=6;
     unique.slice(0,3).forEach((age,i,arr)=>{
       const anchor=nearest(series[0].points,age),actualAge=anchor.age;
       const bx=i===0?g.l:(i===arr.length-1?g.W-g.r-boxW:g.l+(g.iw-boxW)/2);
-      const first=nearest(series[0].points,actualAge),second=nearest(series[1].points,actualAge);
-      const ageLabel=`Age ${Math.round(actualAge)}`;
+      const first=nearest(series[0].points,actualAge),second=nearest(series[1].points,actualAge),isTarget=Math.abs(actualAge-s.targetAge)<.5,isToday=Math.abs(actualAge-s.currentAge)<.5;
+      const ageLabel=checkpointTitle(actualAge,s);
       const label1=`${series[0].shortLabel}: ${compact(first.v)}`;
-      const label2=`${series[1].shortLabel}: ${compact(second.v)}`;
-      svg.innerHTML+=`<g class="fi-static-value"><rect x="${bx}" y="${boxY}" width="${boxW}" height="${boxH}" rx="8" fill="#ffffff" stroke="#c9d9e2"/><text x="${bx+10}" y="${boxY+15}" font-size="10.5" font-weight="800" fill="#102945">${esc(ageLabel)}</text><line x1="${bx+10}" x2="${bx+24}" y1="${boxY+29}" y2="${boxY+29}" stroke="${series[0].color}" stroke-width="3"/><text x="${bx+30}" y="${boxY+32}" font-size="9.5" font-weight="650" fill="#405b75">${esc(label1)}</text><line x1="${bx+10}" x2="${bx+24}" y1="${boxY+43}" y2="${boxY+43}" stroke="${series[1].color}" stroke-width="3"/><text x="${bx+30}" y="${boxY+46}" font-size="9.5" font-weight="650" fill="#405b75">${esc(label2)}</text></g>`;
+      const secondName=isToday&&series[1].currentShortLabel?series[1].currentShortLabel:series[1].shortLabel;
+      const label2=`${secondName}: ${compact(second.v)}`;
+      const fill=isTarget?'#eef9f7':'#ffffff',stroke=isTarget?'#0e8b80':'#c9d9e2',strokeWidth=isTarget?2:1;
+      svg.innerHTML+=`<g class="fi-static-value ${isTarget?'fi-target-card':''}"><rect x="${bx}" y="${boxY}" width="${boxW}" height="${boxH}" rx="9" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/><text x="${bx+10}" y="${boxY+16}" font-size="10.5" font-weight="900" fill="#102945">${esc(ageLabel)}</text><line x1="${bx+10}" x2="${bx+24}" y1="${boxY+32}" y2="${boxY+32}" stroke="${series[0].color}" stroke-width="3"/><text x="${bx+30}" y="${boxY+35}" font-size="8.7" font-weight="700" fill="#405b75">${esc(label1)}</text><line x1="${bx+10}" x2="${bx+24}" y1="${boxY+49}" y2="${boxY+49}" stroke="${series[1].color}" stroke-width="3"/><text x="${bx+30}" y="${boxY+52}" font-size="8.4" font-weight="700" fill="#405b75">${esc(label2)}</text></g>`;
     });
   }
+  function addTargetAgeMarker(svg,g,s){
+    if(s.targetAge<=g.minAge||s.targetAge>=g.maxAge)return;const x=g.x(s.targetAge),label=`Target Age ${Math.round(s.targetAge)}`,w=94;
+    svg.innerHTML+=`<g class="target-age-marker"><line x1="${x}" x2="${x}" y1="${g.t}" y2="${g.H-g.b}" stroke="#0e8b80" stroke-width="1.6" stroke-dasharray="5 5"/><rect x="${Math.max(g.l,Math.min(g.W-g.r-w,x-w/2))}" y="${g.t+5}" width="${w}" height="20" rx="10" fill="#e8f6f3" stroke="#0e8b80"/><text x="${Math.max(g.l,Math.min(g.W-g.r-w,x-w/2))+w/2}" y="${g.t+18}" text-anchor="middle" font-size="9" font-weight="900" fill="#08756d">${esc(label)}</text></g>`;
+  }
+  function addFICrossingMarker(svg,g,r,which){
+    if(r.target.target<=0||!r.modelledFI.reached||!Number.isFinite(r.modelledFI.age)||r.modelledFI.age<g.minAge||r.modelledFI.age>g.maxAge)return;
+    const x=g.x(r.modelledFI.age),value=which==='path'?(r.modelledFI.target+r.modelledFI.portfolio)/2:r.modelledFI.portfolio,y=g.yy(value),closeToTarget=Math.abs(r.modelledFI.age-r.state.targetAge)<1;
+    const label=modelledAgeText(r,true),boxW=128,boxX=Math.max(g.l,Math.min(g.W-g.r-boxW,x-boxW/2)),boxY=g.t+(closeToTarget?52:30);
+    svg.innerHTML+=`<g class="fi-crossing-marker"><line x1="${x}" x2="${x}" y1="${g.t}" y2="${g.H-g.b}" stroke="#b46b00" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="${x}" cy="${y}" r="5" fill="#b46b00" stroke="#fff" stroke-width="2"/><rect x="${boxX}" y="${boxY}" width="${boxW}" height="34" rx="8" fill="#fff7e8" stroke="#d99a35"/><text x="${boxX+boxW/2}" y="${boxY+13}" text-anchor="middle" font-size="8.8" font-weight="900" fill="#704c00">FI reached</text><text x="${boxX+boxW/2}" y="${boxY+26}" text-anchor="middle" font-size="8.2" font-weight="750" fill="#704c00">${esc(label)}</text></g>`;
+  }
   function renderCharts(r,rawState){
-    // Core.series expects raw UI percentages (for example 5 for 5%).
-    // r.state already contains normalized decimals, so use rawState here.
-    const st=r.state;
-    let endAge=Math.max(st.targetAge+5,st.currentAge+20);
-    if(r.modelledFI.reached)endAge=Math.max(endAge,Math.ceil(r.modelledFI.age+2));
-    endAge=Math.min(90,endAge);
-    const points=C.series(rawState,endAge);
+    const st=r.state,endAge=chartEndAge(r),points=C.series(rawState,endAge),checkpoints=[st.currentAge,st.targetAge,Math.min(90,st.targetAge+5)];
     const pathSeries=[
-      {label:'FI target',shortLabel:'Target',color:'#173d5c',points:points.map(p=>({age:p.age,v:p.target}))},
-      {label:'Projected portfolio',shortLabel:'Portfolio',color:'#0e8b80',points:points.map(p=>({age:p.age,v:p.portfolio}))}
+      {label:'FI target',shortLabel:'FI Target',color:'#173d5c',points:points.map(p=>({age:p.age,v:p.target}))},
+      {label:'Projected portfolio value',shortLabel:'Projected Portfolio Value',currentShortLabel:'Current Portfolio Value',color:'#0e8b80',points:points.map(p=>({age:p.age,v:p.portfolio}))}
     ];
     const max=niceMax(Math.max(...points.flatMap(p=>[p.target,p.portfolio]))*1.08),g=chartBase(els.pathChart,max,st.currentAge,endAge);
     els.pathChart.innerHTML+=`<path class="target-line" d="${path(points,g,'target')}"/><path class="plan-line" d="${path(points,g,'portfolio')}"/>`;
-    addStaticChartValues(els.pathChart,g,[st.currentAge,st.targetAge,endAge],pathSeries);
-    bindChart(els.pathChart,pathSeries,g);
+    addTargetAgeMarker(els.pathChart,g,st);addFICrossingMarker(els.pathChart,g,r,'path');addStaticChartValues(els.pathChart,g,checkpoints,pathSeries,st);bindChart(els.pathChart,pathSeries,g);
 
     const added=points.map(p=>({age:p.age,added:st.currentAssets+p.contributions,portfolio:p.portfolio}));
     const growthSeries=[
-      {label:'Assets + contributions',shortLabel:'Money added',color:'#8799aa',points:added.map(p=>({age:p.age,v:p.added}))},
-      {label:'Projected portfolio',shortLabel:'Portfolio',color:'#0e8b80',points:added.map(p=>({age:p.age,v:p.portfolio}))}
+      {label:'Total money added',shortLabel:'Money Added',color:'#8799aa',points:added.map(p=>({age:p.age,v:p.added}))},
+      {label:'Projected portfolio value',shortLabel:'Projected Portfolio Value',currentShortLabel:'Current Portfolio Value',color:'#0e8b80',points:added.map(p=>({age:p.age,v:p.portfolio}))}
     ];
     const max2=niceMax(Math.max(...added.flatMap(p=>[p.added,p.portfolio]))*1.08),g2=chartBase(els.growthChart,max2,st.currentAge,endAge);
     els.growthChart.innerHTML+=`<path class="added-line" d="${path(added,g2,'added')}"/><path class="plan-line" d="${path(added,g2,'portfolio')}"/>`;
-    addStaticChartValues(els.growthChart,g2,[st.currentAge,st.targetAge,endAge],growthSeries);
-    bindChart(els.growthChart,growthSeries,g2);
+    addTargetAgeMarker(els.growthChart,g2,st);addFICrossingMarker(els.growthChart,g2,r,'growth');addStaticChartValues(els.growthChart,g2,checkpoints,growthSeries,st);bindChart(els.growthChart,growthSeries,g2);
   }
 
-  async function copySummary(){const r=C.result(state()),s=r.state,txt=[`CARROWMONT FINANCIAL INDEPENDENCE SUMMARY`,``,`Country / region: ${L.getProfile().label}`,`Currency: ${L.getCurrency()}`,`Current age: ${s.currentAge}`,`Target age: ${s.targetAge}`,`Monthly spending today: ${money(s.monthlySpending)}`,`Expected spending at FI: ${(s.spendingPct*100).toFixed(0)}% of today`,`Monthly non-portfolio income at FI: ${money(s.monthlyIncome)}`,`Planning withdrawal rate: ${(s.withdrawalRate*100).toFixed(1)}%`,`Inflation assumption: ${(s.inflation*100).toFixed(1)}%`,`Expected investment return: ${(s.annualReturn*100).toFixed(1)}%`,`Annual investment increase: ${(s.annualStepUp*100).toFixed(1)}%`,`Income / pay frequency: ${frequencyLabel(s.payFrequency)}`,`Investment frequency: ${frequencyLabel(s.investmentFrequency)}`,`${currentInvestmentLabelText(s.investmentFrequency)}: ${contributionText(s.monthlyContribution,s.investmentFrequency)}`,``,`Estimated FI number today: ${money(r.fiToday)}`,`FI target at age ${s.targetAge}: ${money(r.target.target)}`,`Projected portfolio at age ${s.targetAge}: ${money(r.target.portfolio)}`,`${requiredInvestmentLabelText(s.investmentFrequency,'Starting')}: ${contributionText(r.requiredContribution,s.investmentFrequency)}`,`${requiredInvestmentLabelText(s.investmentFrequency,'Additional')}: ${contributionText(r.additionalContribution,s.investmentFrequency)}`,`Modelled FI timing under current plan: ${r.target.target<=0?'No portfolio target':(r.modelledFI.reached?r.modelledFI.age.toFixed(1):'Not reached by age 90')}`,``,`Illustrative estimate only. The withdrawal rate is a planning assumption, not a guarantee or recommendation.`,`carrowmont.com`].join('\n');try{await navigator.clipboard.writeText(txt);els.copyBtn.textContent='Copied';setTimeout(()=>els.copyBtn.textContent='Copy Summary',1400);}catch(_){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}}
+  function renderJourney(r,rawState){
+    if(!els.journeyBody)return;const s=r.state,j=C.annualJourney(rawState,chartEndAge(r)),targetMoneyAdded=s.currentAssets+r.target.contributions;
+    els.journeyMoneyAdded.textContent=compact(targetMoneyAdded);els.journeyGrowth.textContent=compact(r.target.growth);els.journeyPortfolio.textContent=compact(r.target.portfolio);els.journeyFunding.textContent=pct(Math.min(9.99,r.target.funding));
+    const milestoneBits=[`<span><strong>Target Age ${Math.round(s.targetAge)}</strong> · FI target ${esc(compact(r.target.target))} · Projected Portfolio Value ${esc(compact(r.target.portfolio))}</span>`];
+    if(r.target.target<=0)milestoneBits.push('<span><strong>No portfolio target</strong> under the current spending and income assumptions.</span>');
+    else if(r.modelledFI.reached)milestoneBits.push(`<span><strong>FI reached</strong> · ${esc(modelledAgeText(r))}</span>`);
+    else milestoneBits.push('<span><strong>FI target not reached within the modelled period.</strong></span>');
+    els.journeyMilestones.innerHTML=milestoneBits.join('');
+    els.journeyCount.textContent=`${j.rows.length} annual rows`;
+    els.journeyBody.innerHTML=j.rows.map(row=>{const tags=[];if(row.isTargetAge)tags.push('<span class="journey-badge target">Target Age</span>');if(row.reachedDuringYear&&r.target.target>0)tags.push(`<span class="journey-badge reached">FI reached ${esc(modelledAgeText(r,true))}</span>`);const cls=[row.isTargetAge?'target-row':'',row.reachedDuringYear&&r.target.target>0?'reached-row':''].filter(Boolean).join(' ');return `<tr class="${cls}"><td><strong>Age ${Math.round(row.age)}</strong><small>Year ${row.year}</small>${tags.join('')}</td><td data-value="${row.investmentThatYear}">${esc(compact(row.investmentThatYear))}</td><td data-value="${row.totalMoneyAdded}">${esc(compact(row.totalMoneyAdded))}</td><td data-value="${row.growth}">${esc(compact(row.growth))}</td><td data-value="${row.portfolio}">${esc(compact(row.portfolio))}</td><td data-value="${row.target}">${esc(compact(row.target))}</td><td data-value="${row.funding}">${esc(pct(Math.min(9.99,row.funding)))}</td></tr>`;}).join('');
+    els.journeyNote.textContent=`Annual snapshots summarize the underlying ${frequencyLabel(s.investmentFrequency)} investment model. “Investment that year” is the total contributed during that year; total money added includes current invested assets plus cumulative contributions. Modelled investment growth is the projected portfolio value above total money added.`;
+  }
+
+  async function copySummary(){
+    const r=C.result(state()),s=r.state,targetPlus5Age=Math.min(90,s.targetAge+5),plus5=C.targetProjection(s,targetPlus5Age),timing=modelledAgeText(r);
+    const txt=[`CARROWMONT FINANCIAL INDEPENDENCE SUMMARY`,``,`Country / region: ${L.getProfile().label}`,`Currency: ${L.getCurrency()}`,`Current age: ${s.currentAge}`,`Target Age: ${s.targetAge}`,`Monthly spending today: ${money(s.monthlySpending)}`,`Expected spending at FI: ${(s.spendingPct*100).toFixed(0)}% of today`,`Monthly non-portfolio income at FI: ${money(s.monthlyIncome)}`,`Planning withdrawal rate: ${(s.withdrawalRate*100).toFixed(1)}%`,`Inflation assumption: ${(s.inflation*100).toFixed(1)}%`,`Expected investment return: ${(s.annualReturn*100).toFixed(1)}%`,`Annual investment increase: ${(s.annualStepUp*100).toFixed(1)}%`,`Income / pay frequency: ${frequencyLabel(s.payFrequency)}`,`Investment frequency: ${frequencyLabel(s.investmentFrequency)}`,`${currentInvestmentLabelText(s.investmentFrequency)}: ${contributionText(s.monthlyContribution,s.investmentFrequency)}`,``,`Estimated FI number today: ${money(r.fiToday)}`,`FI target at Target Age ${s.targetAge}: ${money(r.target.target)}`,`Projected Portfolio Value at Target Age ${s.targetAge}: ${money(r.target.portfolio)}`,`Funding at Target Age: ${pct(Math.min(9.99,r.target.funding))}`,`Target Age +5 (${targetPlus5Age}) FI target: ${money(plus5.target)}`,`Target Age +5 (${targetPlus5Age}) Projected Portfolio Value: ${money(plus5.portfolio)}`,`${requiredInvestmentLabelText(s.investmentFrequency,'Starting')}: ${contributionText(r.requiredContribution,s.investmentFrequency)}`,`${requiredInvestmentLabelText(s.investmentFrequency,'Additional')}: ${contributionText(r.additionalContribution,s.investmentFrequency)}`,`Modelled FI timing under current plan: ${timing}`,``,`Illustrative estimate only. The withdrawal rate is a planning assumption, not a guarantee or recommendation.`,`carrowmont.com`].join('\n');
+    try{await navigator.clipboard.writeText(txt);els.copyBtn.textContent='Copied';setTimeout(()=>els.copyBtn.textContent='Copy Summary',1400);}catch(_){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  }
 
   async function generateFIReport(){
     const status=document.getElementById('reportDownloadStatus');
