@@ -33,7 +33,60 @@
   const money=v=>L.formatMoney(v,{maximumFractionDigits:0});
   const compact=v=>L.formatCompactMoney(v,{maximumFractionDigits:2});
   const pct=v=>`${Math.round(v*100)}%`;
+  const PLAN_UNTIL_HELP='Choose the age through which you want this plan to support your expenses. This is a planning horizon, not a prediction of lifespan.';
+  const PLAN_UNTIL_TARGET_ERROR='Plan Until Age must be greater than your Target Financial Independence Age.';
+  const PLAN_UNTIL_MAX_ERROR='Plan Until Age cannot be greater than 120.';
 
+  function ensurePlanUntilError(){
+    if(!els.planUntilField||!els.planUntilAge)return null;
+    let error=document.getElementById('planUntilAgeError');
+    if(!error){
+      error=document.createElement('small');
+      error.id='planUntilAgeError';
+      error.setAttribute('role','alert');
+      error.hidden=true;
+      error.style.color='#b42318';
+      error.style.fontWeight='700';
+      els.planUntilField.appendChild(error);
+    }
+    return error;
+  }
+  function validatePlanUntilAge(targetAge){
+    const typed=parseFloat(els.planUntilAge?.value);
+    if(!Number.isFinite(typed))return {valid:false,value:null,message:'Enter a Plan Until Age.'};
+    const value=Math.round(typed);
+    if(value<=targetAge)return {valid:false,value,message:PLAN_UNTIL_TARGET_ERROR};
+    if(value>120)return {valid:false,value,message:PLAN_UNTIL_MAX_ERROR};
+    return {valid:true,value,message:''};
+  }
+  function showPlanUntilValidation(validation,active=true){
+    if(!els.planUntilAge)return;
+    const error=ensurePlanUntilError(),message=active&&!validation.valid?validation.message:'';
+    els.planUntilAge.setCustomValidity(message);
+    els.planUntilAge.setAttribute('aria-invalid',message?'true':'false');
+    if(error){error.textContent=message;error.hidden=!message;}
+  }
+  function setVisualEmptyMessage(title,body){
+    const heading=els.visualEmpty?.querySelector('h3'),copy=els.visualEmpty?.querySelector('p');
+    if(heading)heading.textContent=title;
+    if(copy)copy.textContent=body;
+  }
+  function renderInvalidPlanUntil(raw,message){
+    const targetAge=Math.round(raw.targetAge);
+    els.targetPill.textContent=`Target age ${targetAge} · Plan until —`;
+    els.fiHeroLabel.textContent='Required portfolio if FI started today';
+    els.fiToday.textContent='—';
+    els.fiTodayNote.textContent=message;
+    els.modelledAge.textContent='Correct Plan Until Age';
+    els.fiTargetAgeLabel.textContent=`Required portfolio at Target Age ${targetAge}`;
+    els.fiTargetAge.textContent='—';els.portfolioTargetAge.textContent='—';els.requiredMonthly.textContent='—';els.additionalMonthly.textContent='—';
+    els.fundingBoxLabel.textContent='Projected funding of Plan Until Age target';
+    els.fundingPct.textContent='—';els.fundingBar.style.width='0%';els.fundingText.textContent=message;
+    if(els.longevityBox)els.longevityBox.hidden=true;
+    setVisualEmptyMessage('Correct Plan Until Age',message);
+    els.visualEmpty.hidden=false;els.visualContent.hidden=true;els.insightsSection.hidden=true;els.scenariosSection.hidden=true;if(els.fiJourney)els.fiJourney.hidden=true;
+    if(els.copyBtn)els.copyBtn.disabled=true;if(els.reportBtn)els.reportBtn.disabled=true;
+  }
 
   function modelledAgeText(r,compactMode=false){
     if(r.target.target<=0) return 'No portfolio target';
@@ -89,7 +142,7 @@
     const currentAge=Math.max(18,Math.min(80,num(els.currentAge,35)));
     const targetAge=Math.max(currentAge+1,Math.min(90,num(els.targetAge,currentAge+15)));
     const planningMode=els.planningModeUntilAge?.checked?'until_age':'sustainable';
-    const planUntilAge=Math.max(targetAge+1,Math.min(120,num(els.planUntilAge,Math.max(95,targetAge+1))));
+    const typedPlanUntil=parseFloat(els.planUntilAge?.value),planUntilAge=Number.isFinite(typedPlanUntil)?typedPlanUntil:Math.max(95,targetAge+1);
     return {currentAge,targetAge,planningMode,planUntilAge,monthlySpending:num(els.monthlySpending),spendingPct:num(els.spendingPct,100),monthlyIncome:num(els.monthlyIncome),withdrawalRate:num(els.withdrawalRate,4),inflation:num(els.inflation,5),currentAssets:num(els.currentAssets),monthlyContribution:num(els.monthlyContribution),payFrequency:els.payFrequency?.value||'monthly',investmentFrequency:els.investmentFrequency?.value||'monthly',annualReturn:num(els.annualReturn,8),annualStepUp:num(els.annualStepUp)};
   }
 
@@ -99,15 +152,17 @@
     const fallback=Math.min(90,currentAge+15);
     const targetAge=Math.max(currentAge+1,Math.min(90,Number.isFinite(typed)?typed:fallback));
     els.targetAge.value=Math.round(targetAge);
-    if(els.planUntilAge){els.planUntilAge.min=String(Math.round(targetAge+1));if(num(els.planUntilAge,95)<=targetAge)els.planUntilAge.value=String(Math.min(120,Math.round(targetAge+1)));}
+    if(els.planUntilAge)els.planUntilAge.min=String(Math.round(targetAge+1));
     render();
   }
 
   function commitPlanUntilAge(){
     const targetAge=Math.max(19,Math.min(90,num(els.targetAge,50)));
-    const typed=parseFloat(els.planUntilAge.value),fallback=Math.max(95,targetAge+1);
-    const planUntilAge=Math.max(targetAge+1,Math.min(120,Number.isFinite(typed)?typed:fallback));
-    els.planUntilAge.min=String(Math.round(targetAge+1));els.planUntilAge.value=String(Math.round(planUntilAge));
+    const validation=validatePlanUntilAge(targetAge);
+    els.planUntilAge.min=String(Math.round(targetAge+1));
+    showPlanUntilValidation(validation,true);
+    if(!validation.valid){render();return;}
+    els.planUntilAge.value=String(validation.value);
     render();
   }
 
@@ -130,10 +185,16 @@
   }
 
   function render(){
-    const raw=state(),r=C.result(raw),s=r.state,t=r.target,isUntil=s.planningMode==='until_age';
+    const raw=state(),isUntil=raw.planningMode==='until_age',planValidation=validatePlanUntilAge(raw.targetAge);
     if(els.planUntilField)els.planUntilField.hidden=!isUntil;
     if(els.withdrawalRateField)els.withdrawalRateField.hidden=isUntil;
-    if(els.planUntilAge){els.planUntilAge.min=String(Math.round(s.targetAge+1));if(Number(els.planUntilAge.value)!==Math.round(s.planUntilAge))els.planUntilAge.value=String(Math.round(s.planUntilAge));}
+    if(els.planUntilAge)els.planUntilAge.min=String(Math.round(raw.targetAge+1));
+    showPlanUntilValidation(planValidation,isUntil);
+    if(isUntil&&!planValidation.valid){renderInvalidPlanUntil(raw,planValidation.message);return;}
+    if(isUntil&&els.planUntilAge&&document.activeElement!==els.planUntilAge&&Number(els.planUntilAge.value)!==planValidation.value)els.planUntilAge.value=String(planValidation.value);
+    if(els.copyBtn)els.copyBtn.disabled=false;if(els.reportBtn)els.reportBtn.disabled=false;
+    setVisualEmptyMessage('Enter your details to see your FI path','Add your current spending and investment details above. Your target, projected portfolio, charts and comparisons will appear here automatically.');
+    const r=C.result(isUntil?{...raw,planUntilAge:planValidation.value}:raw),s=r.state,t=r.target;
     els.targetPill.textContent=isUntil?`Target age ${Math.round(s.targetAge)} · Plan until ${Math.round(s.planUntilAge)}`:`Target age ${Math.round(s.targetAge)}`;
     const empty=s.monthlySpending<=0&&s.monthlyIncome<=0&&s.currentAssets<=0&&s.monthlyContribution<=0;
     els.visualEmpty.hidden=!empty;els.visualContent.hidden=empty;els.insightsSection.hidden=empty;els.scenariosSection.hidden=empty;if(els.fiJourney)els.fiJourney.hidden=empty;
