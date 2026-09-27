@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://carrowmont.com/financial-independence/" />
   <meta name="twitter:card" content="summary" />
   <meta name="theme-color" content="#0e827a" />
-  <link rel="stylesheet" href="styles.css?v=20260927.1" />
+  <link rel="stylesheet" href="styles.css?v=20260927.3" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Carrowmont Financial Independence Planner","url":"https://carrowmont.com/financial-independence/","applicationCategory":"FinanceApplication","operatingSystem":"Any","description":"An educational financial-independence calculator for modelling a spending-based target, portfolio growth and target-age funding needs."}</script>
 </head>
 <body>
@@ -154,7 +154,7 @@
       </div>
       <div class="chart-grid">
         <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">TARGET VS PORTFOLIO</div><h3 id="pathChartTitle">FI target vs projected portfolio value</h3></div><p id="pathChartNote">Target Age and the actual FI crossing are marked directly on the chart.</p></div><svg id="pathChart" viewBox="0 0 800 360" role="img" aria-label="Financial independence target versus projected portfolio value chart"></svg></article>
-        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow">PORTFOLIO BUILD</div><h3>Money added vs projected portfolio value</h3></div><p>See how contributions and modelled investment growth combine over time.</p></div><svg id="growthChart" viewBox="0 0 800 360" role="img" aria-label="Money added versus projected portfolio value chart"></svg></article>
+        <article class="chart-card"><div class="chart-head"><div><div class="eyebrow" id="growthChartEyebrow">PORTFOLIO BUILD</div><h3 id="growthChartTitle">Money added vs projected portfolio value</h3></div><p id="growthChartNote">See how contributions and modelled investment growth combine over time.</p></div><svg id="growthChart" viewBox="0 0 800 360" role="img" aria-label="Money added versus projected portfolio value chart"></svg></article>
       </div>
     </div>
   </div>
@@ -174,7 +174,7 @@
       <summary><span>View full yearly breakdown</span><small id="journeyCount"></small></summary>
       <div class="table-scroll">
         <table class="journey-table">
-          <thead><tr><th>Age / year</th><th>Investment that year</th><th>Total money added</th><th>Modelled investment growth</th><th>Projected portfolio value</th><th id="journeyTargetHead">FI target</th><th>Funding %</th></tr></thead>
+          <thead><tr id="journeyHeadRow"><th>Age / year</th><th>Investment that year</th><th>Total money added</th><th>Modelled investment growth</th><th>Projected portfolio value</th><th id="journeyTargetHead">FI target</th><th>Funding %</th></tr></thead>
           <tbody id="journeyBody"></tbody>
         </table>
       </div>
@@ -218,7 +218,7 @@
       <p><strong>Plan Until Age mode:</strong> The model calculates the portfolio required at each age to fund monthly portfolio-supported spending through the selected Plan Until Age. Spending rises with the inflation assumption; withdrawals are modelled at the start of each month and the remaining balance then earns the monthly rate implied by the expected annual return.</p>
       <p><strong>Recurring non-portfolio income:</strong> Income entered in today’s money is treated as retaining the same real purchasing power, so only the remaining portfolio-funded spending is modelled.</p>
       <p><strong>Portfolio projection:</strong> Existing invested assets grow using the periodic rate implied by the annual return and selected investment frequency. Contributions are added once per selected investment period and can increase once each year by the entered step-up rate.</p>
-      <p><strong>Modelled FI age:</strong> The first modelled contribution period when the projected portfolio equals or exceeds the target produced by the selected planning approach, checked through age 90 and displayed in years and months.</p><p><strong>Financial Independence Journey:</strong> The year-by-year section is an annual summary of the same underlying frequency-based model. It does not replace or simplify the approved calculation frequency.</p>
+      <p><strong>Modelled FI age:</strong> The first modelled contribution period when the projected portfolio equals or exceeds the target produced by the selected planning approach. Sustainable FI is checked through age 90; Plan Until Age is checked through the selected planning horizon before the target becomes zero. Timing is displayed in years and months.</p><p><strong>Financial Independence Journey:</strong> Sustainable FI shows annual accumulation snapshots. Plan Until Age shows accumulation through Target Age and then a distinct drawdown phase through Plan Until Age, with inflation-adjusted portfolio-funded spending, modelled post-FI growth and ending portfolio balance. The underlying calculations continue to use the approved contribution frequency before Target Age and monthly withdrawals after Target Age.</p>
       <p><strong>Recurring investment required:</strong> The starting contribution at the selected investment frequency that would model to the selected-age target while applying the entered annual step-up. It is solved numerically.</p>
       <p class="method-note"><strong>Important:</strong> These are deterministic planning illustrations. Sustainable FI mode does not determine whether a withdrawal rate is safe or suitable. Plan Until Age mode uses the same constant expected return before and after FI and does not model sequence-of-returns risk, taxes, fees, asset-allocation changes, irregular spending shocks or future policy changes. Plan Until Age is a planning horizon, not a prediction of lifespan.</p>
     </div>
@@ -229,11 +229,11 @@
 <footer class="site-footer"><div class="container footer-grid"><div><strong>CARROWMONT</strong><p>Financial planning tools and educational resources for clearer financial decisions.</p></div><div><strong>Tools</strong><a href="/retirement-calculator/">Retirement Planner</a><a href="/inflation-calculator/">Inflation Calculator</a><a href="/goal-planner/">Goal Planner</a><a href="/financial-independence/">Financial Independence</a><a href="/#tools">All tools</a></div><div><strong>Carrowmont</strong><a href="/learn.html">Learn</a><a href="/about.html">About</a><a href="/methodology.html">Methodology</a><a href="/contact.html">Contact</a></div><div><strong>Legal</strong><a href="/disclaimer.html">Disclaimer</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div></div><div class="container footer-bottom"><span>© 2026 Carrowmont</span><span>Illustrative estimates, not financial advice.</span></div></footer>
 
 <script src="locale.js?v=20260927.1"></script>
-<script src="core.js?v=20260927.2"></script>
+<script src="core.js?v=20260927.3"></script>
 <script src="pdf-export.js?v=20260922.4"></script>
 <script src="report-standard.js?v=20260925.2"></script>
-<script src="fi-pdf-renderer.js?v=20260927.2"></script>
-<script src="app.js?v=20260927.2"></script>
+<script src="fi-pdf-renderer.js?v=20260927.3"></script>
+<script src="app.js?v=20260927.3"></script>
 <script src="analytics.js?v=1.0.1" data-carrowmont-tool="financial_independence" data-track-tool-open="true"></script>
 </body>
 </html>
