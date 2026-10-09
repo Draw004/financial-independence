@@ -4,7 +4,7 @@
   if(!L||!C) return;
   const $=id=>document.getElementById(id);
   const els={
-    localeMenu:$('localeMenu'),localeCurrent:$('localeCurrent'),regionSelect:$('regionSelect'),currencySelect:$('currencySelect'),localeDone:$('localeDone'),
+    localeMenu:$('localeMenu'),localeCurrent:$('localeCurrent'),regionSelect:$('regionSelect'),currencySelect:$('currencySelect'),localeDone:$('localeDone'),seo3bHandoffNotice:$('seo3bHandoffNotice'),
     currentAge:$('currentAge'),targetAge:$('targetAge'),planningModeSustainable:$('planningModeSustainable'),planningModeUntilAge:$('planningModeUntilAge'),planUntilAge:$('planUntilAge'),planUntilField:$('planUntilField'),withdrawalRateField:$('withdrawalRateField'),monthlySpending:$('monthlySpending'),spendingPct:$('spendingPct'),monthlyIncome:$('monthlyIncome'),withdrawalRate:$('withdrawalRate'),inflation:$('inflation'),currentAssets:$('currentAssets'),monthlyContribution:$('monthlyContribution'),payFrequency:$('payFrequency'),investmentFrequency:$('investmentFrequency'),sameAsPayCycle:$('sameAsPayCycle'),currentInvestmentLabel:$('currentInvestmentLabel'),currentInvestmentHelp:$('currentInvestmentHelp'),annualReturn:$('annualReturn'),annualStepUp:$('annualStepUp'),resetBtn:$('resetBtn'),
     targetPill:$('targetPill'),fiHeroLabel:$('fiHeroLabel'),fiToday:$('fiToday'),fiTodayNote:$('fiTodayNote'),modelledAge:$('modelledAge'),fiTargetAgeLabel:$('fiTargetAgeLabel'),fiTargetAge:$('fiTargetAge'),portfolioTargetAge:$('portfolioTargetAge'),requiredMonthly:$('requiredMonthly'),additionalMonthly:$('additionalMonthly'),requiredInvestmentLabel:$('requiredInvestmentLabel'),additionalInvestmentLabel:$('additionalInvestmentLabel'),fundingBoxLabel:$('fundingBoxLabel'),fundingPct:$('fundingPct'),fundingBar:$('fundingBar'),fundingText:$('fundingText'),longevityBox:$('longevityBox'),longevityPlanAge:$('longevityPlanAge'),longevityBalance:$('longevityBalance'),longevityStatus:$('longevityStatus'),longevityFirstWithdrawal:$('longevityFirstWithdrawal'),longevityNote:$('longevityNote'),copyBtn:$('copyBtn'),
     netSpendCard:$('netSpendCard'),fiTodayCardLabel:$('fiTodayCardLabel'),fiTodayCard:$('fiTodayCard'),fiTargetCardLabel:$('fiTargetCardLabel'),fiTargetCard:$('fiTargetCard'),portfolioCard:$('portfolioCard'),pathChartTitle:$('pathChartTitle'),pathChartNote:$('pathChartNote'),pathChart:$('pathChart'),growthChartEyebrow:$('growthChartEyebrow'),growthChartTitle:$('growthChartTitle'),growthChartNote:$('growthChartNote'),growthChart:$('growthChart'),visualEmpty:$('visualEmpty'),visualContent:$('visualContent'),insightsSection:$('insightsSection'),scenariosSection:$('scenariosSection'),
@@ -140,6 +140,26 @@
     if(!usesIndiaDemoDefaults()) resetMoneyForLocale(); else render();
   }
   els.resetBtn.addEventListener('click',resetAll);
+
+  function applySeo3bHandoff(){
+    let params;
+    try{params=new URLSearchParams(window.location.search);}catch(_){return false;}
+    if(params.get('cm_handoff')!=='fi_spending_v1')return false;
+    const region=params.get('region'),currency=params.get('currency');
+    if(region&&L.regions[region])L.setLocale(region,currency&&L.currencies[currency]?currency:L.regions[region].currency);
+    const monthly=Number(params.get('spendingMonthly'));
+    const rate=Number(params.get('withdrawalRate'));
+    const inflation=Number(params.get('inflation'));
+    if(Number.isFinite(monthly)&&monthly>=0)els.monthlySpending.value=String(monthly);
+    if(Number.isFinite(rate)&&rate>=.5&&rate<=15)els.withdrawalRate.value=String(rate);
+    if(Number.isFinite(inflation)&&inflation>=0&&inflation<=25)els.inflation.value=String(inflation);
+    els.spendingPct.value='100';
+    els.monthlyIncome.value='0';
+    if(els.planningModeSustainable)els.planningModeSustainable.checked=true;
+    if(els.planningModeUntilAge)els.planningModeUntilAge.checked=false;
+    if(els.seo3bHandoffNotice)els.seo3bHandoffNotice.hidden=false;
+    return true;
+  }
 
   function state(){
     const currentAge=Math.max(18,Math.min(80,num(els.currentAge,35)));
@@ -482,5 +502,6 @@
   });
 
   populateLocale();syncFrequencyOptions();
-  if(usesIndiaDemoDefaults()) render(); else resetMoneyForLocale();
+  if(applySeo3bHandoff()){updateLocaleSummary();syncFrequencyOptions();render();}
+  else if(usesIndiaDemoDefaults()) render(); else resetMoneyForLocale();
 })();

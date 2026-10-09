@@ -109,3 +109,13 @@
 /* Carrowmont shared locale pill geometry lock - 2026-10-02 */
 .site-header #localeSummary{box-sizing:border-box!important;height:44px!important;min-height:44px!important;max-height:44px!important}
 @media(max-width:720px){.site-header #localeSummary{height:38px!important;min-height:38px!important;max-height:38px!important}}
+
+/* SEO3B quick-target bridge and verified input handoff */
+.fi-quick-bridge{padding:0 0 34px;background:#fff}
+.fi-quick-bridge-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;border:1px solid var(--line);border-radius:20px;padding:24px 26px;background:#f6fbfb;box-shadow:0 8px 24px rgba(16,41,69,.04)}
+.fi-quick-bridge-card h2{margin:6px 0 8px;font-size:24px;letter-spacing:-.02em}
+.fi-quick-bridge-card p{margin:0;color:var(--muted);line-height:1.55;max-width:850px}
+.fi-quick-bridge-card .btn{min-width:210px}
+.fi-handoff-notice{margin-top:13px!important;padding:12px 14px;border-left:4px solid var(--teal);border-radius:10px;background:#fff;color:#45657a!important}
+.fi-handoff-notice[hidden]{display:none!important}
+@media(max-width:720px){.fi-quick-bridge{padding-bottom:22px}.fi-quick-bridge-card{grid-template-columns:1fr;padding:19px}.fi-quick-bridge-card .btn{width:100%;min-width:0}.fi-quick-bridge-card h2{font-size:22px}}
