@@ -36,6 +36,7 @@
   const PLAN_UNTIL_HELP='Choose the age through which you want this plan to support your expenses. This is a planning horizon, not a prediction of lifespan.';
   const PLAN_UNTIL_TARGET_ERROR='Plan Until Age must be greater than your Target Financial Independence Age.';
   const PLAN_UNTIL_MAX_ERROR='Plan Until Age cannot be greater than 120.';
+  const FI_SPENDING_HANDOFF_KEY='carrowmont_fi_spending_handoff_v2';
 
   function ensurePlanUntilError(){
     if(!els.planUntilField||!els.planUntilAge)return null;
@@ -141,15 +142,46 @@
   }
   els.resetBtn.addEventListener('click',resetAll);
 
+  function scrubFinancialHandoffUrl(){
+    try{
+      const clean=`${window.location.pathname}${window.location.hash||''}`;
+      window.history.replaceState(window.history.state,'',clean);
+    }catch(_){}
+  }
+
   function applySeo3bHandoff(){
     let params;
     try{params=new URLSearchParams(window.location.search);}catch(_){return false;}
-    if(params.get('cm_handoff')!=='fi_spending_v1')return false;
-    const region=params.get('region'),currency=params.get('currency');
+    const handoff=params.get('cm_handoff');
+    let payload=null;
+
+    if(handoff==='fi_spending_v2'){
+      try{
+        payload=JSON.parse(window.sessionStorage.getItem(FI_SPENDING_HANDOFF_KEY)||'null');
+        window.sessionStorage.removeItem(FI_SPENDING_HANDOFF_KEY);
+      }catch(_){payload=null;}
+      scrubFinancialHandoffUrl();
+    }else if(handoff==='fi_spending_v1'){
+      // Backward compatibility for old links: read once, then remove all financial
+      // values from the address bar before analytics.js initializes.
+      payload={
+        region:params.get('region'),
+        currency:params.get('currency'),
+        spendingMonthly:Number(params.get('spendingMonthly')),
+        withdrawalRate:Number(params.get('withdrawalRate')),
+        inflation:Number(params.get('inflation'))
+      };
+      scrubFinancialHandoffUrl();
+    }else{
+      return false;
+    }
+
+    if(!payload||typeof payload!=='object')return false;
+    const region=payload.region,currency=payload.currency;
     if(region&&L.regions[region])L.setLocale(region,currency&&L.currencies[currency]?currency:L.regions[region].currency);
-    const monthly=Number(params.get('spendingMonthly'));
-    const rate=Number(params.get('withdrawalRate'));
-    const inflation=Number(params.get('inflation'));
+    const monthly=Number(payload.spendingMonthly);
+    const rate=Number(payload.withdrawalRate);
+    const inflation=Number(payload.inflation);
     if(Number.isFinite(monthly)&&monthly>=0)els.monthlySpending.value=String(monthly);
     if(Number.isFinite(rate)&&rate>=.5&&rate<=15)els.withdrawalRate.value=String(rate);
     if(Number.isFinite(inflation)&&inflation>=0&&inflation<=25)els.inflation.value=String(inflation);
