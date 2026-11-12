@@ -12,6 +12,7 @@
   };
   let pendingRegion=L.getRegion(),pendingCurrency=L.getCurrency();
   let payFrequencyUserOverride=false,investmentFrequencyUserOverride=false;
+  let mycmTouched=false;
   const frequencyOrder=['weekly','biweekly','semimonthly','fourweekly','monthly'];
   const frequencyBaseLabels={weekly:'Weekly',semimonthly:'Twice Monthly',fourweekly:'Every 4 Weeks',monthly:'Monthly'};
   function frequencyProfile(regionCode=L.getRegion()){return L.regions[regionCode]||L.regions.OTHER||{};}
@@ -137,6 +138,7 @@
   function usesIndiaDemoDefaults(){return L.getRegion()==='IN'&&L.getCurrency()==='INR';}
   function resetMoneyForLocale(){els.monthlySpending.value=0;els.monthlyIncome.value=0;els.currentAssets.value=0;els.monthlyContribution.value=0;render();}
   function resetAll(){
+    mycmTouched=false;
     els.currentAge.value=35;els.targetAge.value=50;if(els.planningModeSustainable)els.planningModeSustainable.checked=true;if(els.planningModeUntilAge)els.planningModeUntilAge.checked=false;if(els.planUntilAge)els.planUntilAge.value=95;els.monthlySpending.value=100000;els.spendingPct.value=100;els.monthlyIncome.value=0;els.withdrawalRate.value=4;els.inflation.value=5;els.currentAssets.value=1500000;els.monthlyContribution.value=30000;els.annualReturn.value=10;els.annualStepUp.value=5;payFrequencyUserOverride=false;investmentFrequencyUserOverride=false;if(els.sameAsPayCycle)els.sameAsPayCycle.checked=false;syncFrequencyOptions();
     if(!usesIndiaDemoDefaults()) resetMoneyForLocale(); else render();
   }
@@ -199,6 +201,33 @@
     const planningMode=els.planningModeUntilAge?.checked?'until_age':'sustainable';
     const typedPlanUntil=parseFloat(els.planUntilAge?.value),planUntilAge=Number.isFinite(typedPlanUntil)?typedPlanUntil:Math.max(95,targetAge+1);
     return {currentAge,targetAge,planningMode,planUntilAge,monthlySpending:num(els.monthlySpending),spendingPct:num(els.spendingPct,100),monthlyIncome:num(els.monthlyIncome),withdrawalRate:num(els.withdrawalRate,4),inflation:num(els.inflation,5),currentAssets:num(els.currentAssets),monthlyContribution:num(els.monthlyContribution),payFrequency:els.payFrequency?.value||'monthly',investmentFrequency:els.investmentFrequency?.value||'monthly',annualReturn:num(els.annualReturn,8),annualStepUp:num(els.annualStepUp)};
+  }
+
+  function applyMyCarrowmontPlan(input){
+    if(!input||typeof input!=='object')return;
+    const region=input.country||input.region,currency=input.currency;
+    if(region&&L.regions?.[region])L.setLocale(region,currency&&L.currencies?.[currency]?currency:L.regions[region].currency);
+    const set=(el,value)=>{if(el&&value!==undefined&&value!==null&&Number.isFinite(Number(value)))el.value=String(value);};
+    set(els.currentAge,input.currentAge);set(els.targetAge,input.targetAge);set(els.planUntilAge,input.planUntilAge);set(els.monthlySpending,input.monthlySpending);set(els.spendingPct,input.spendingPct);set(els.monthlyIncome,input.monthlyIncome);set(els.withdrawalRate,input.withdrawalRate);set(els.inflation,input.inflation);set(els.currentAssets,input.currentAssets);set(els.monthlyContribution,input.monthlyContribution);set(els.annualReturn,input.annualReturn);set(els.annualStepUp,input.annualStepUp);
+    if(els.planningModeUntilAge)els.planningModeUntilAge.checked=input.planningMode==='until_age';
+    if(els.planningModeSustainable)els.planningModeSustainable.checked=input.planningMode!=='until_age';
+    payFrequencyUserOverride=true;investmentFrequencyUserOverride=true;syncFrequencyOptions();
+    if(els.payFrequency&&input.payFrequency)els.payFrequency.value=input.payFrequency;
+    if(els.investmentFrequency&&input.investmentFrequency)els.investmentFrequency.value=input.investmentFrequency;
+    mycmTouched=true;render();
+  }
+
+  function configureMyCarrowmontSave(){
+    const bridge=window.CarrowmontPlanSave;if(!bridge?.register)return;
+    bridge.register({journey:'financial-independence',toolPath:'/financial-independence/',anchor:'#visualContent',
+      getPlan(){
+        const s=state();if(!mycmTouched||!(s.monthlySpending>0||s.currentAssets>0||s.monthlyContribution>0))return null;
+        const periods=C.periodsPerYear?.(s.investmentFrequency)||12;
+        return {label:`Financial independence plan - target age ${Math.round(s.targetAge)}`,scenario:{input:{...s,country:L.getRegion(),currency:L.getCurrency()},summary:{targetAge:s.targetAge,monthlySpending:s.monthlySpending,currentAssets:s.currentAssets}},profileFacts:{
+          'fi.currentAge':{value:s.currentAge,unit:'years',source:'Financial Independence'},'fi.targetAge':{value:s.targetAge,unit:'years',source:'Financial Independence'},'fi.monthlySpending':{value:s.monthlySpending,unit:L.getCurrency(),source:'Financial Independence'},'fi.monthlyPassiveIncome':{value:s.monthlyIncome,unit:L.getCurrency(),source:'Financial Independence'},'fi.withdrawalRatePct':{value:s.withdrawalRate,unit:'pct',source:'Financial Independence'},'fi.inflationPct':{value:s.inflation,unit:'pct',source:'Financial Independence'},'fi.currentAssets':{value:s.currentAssets,unit:L.getCurrency(),source:'Financial Independence'},'fi.monthlyContribution':{value:s.monthlyContribution*periods/12,unit:L.getCurrency(),source:'Financial Independence'},'fi.annualReturnPct':{value:s.annualReturn,unit:'pct',source:'Financial Independence'},'fi.annualStepUpPct':{value:s.annualStepUp,unit:'pct',source:'Financial Independence'}
+        }};
+      },applyPlan:scenario=>applyMyCarrowmontPlan(scenario?.input)
+    });
   }
 
   function commitTargetAge(){
@@ -300,6 +329,7 @@
       const lp=r.longevity.projection;els.longevityBox.hidden=false;els.longevityPlanAge.textContent=`Age ${Math.round(s.planUntilAge)}`;els.longevityBalance.textContent=lp.lasts?compact(lp.finalBalance):money(0);els.longevityStatus.textContent=lp.lasts?`Lasts through age ${Math.round(s.planUntilAge)}`:`Projected to deplete at ${absoluteAgeText(lp.depletionAge)}`;els.longevityFirstWithdrawal.textContent=`${money(r.longevity.monthlyNeedAtTarget)}/mo`;els.longevityNote.textContent=`Uses the same ${(s.annualReturn*100).toFixed(1)}% expected annual return after FI and inflation-adjusted monthly portfolio-funded spending. Projected portfolio balances are future nominal ${L.getCurrency()} values. Taxes, fees and sequence-of-returns risk are not modelled.`;
     }else if(els.longevityBox)els.longevityBox.hidden=true;
     renderInsights(r);renderScenarios(r);renderCharts(r,raw);renderJourney(r,raw);
+    if(mycmTouched)window.CarrowmontPlanSave?.offer?.('financial-independence');
   }
 
   function renderInsights(r){
@@ -508,13 +538,13 @@
     }
   }
 
-  els.payFrequency?.addEventListener('change',()=>{payFrequencyUserOverride=true;if(els.sameAsPayCycle?.checked)els.investmentFrequency.value=els.payFrequency.value;updateFrequencyCopy();render();});
-  els.investmentFrequency?.addEventListener('change',()=>{investmentFrequencyUserOverride=true;updateFrequencyCopy();render();});
-  els.sameAsPayCycle?.addEventListener('change',()=>{if(els.sameAsPayCycle.checked){investmentFrequencyUserOverride=false;els.investmentFrequency.value=els.payFrequency.value;}else{investmentFrequencyUserOverride=true;}els.investmentFrequency.disabled=els.sameAsPayCycle.checked;updateFrequencyCopy();render();});
+  els.payFrequency?.addEventListener('change',()=>{mycmTouched=true;payFrequencyUserOverride=true;if(els.sameAsPayCycle?.checked)els.investmentFrequency.value=els.payFrequency.value;updateFrequencyCopy();render();});
+  els.investmentFrequency?.addEventListener('change',()=>{mycmTouched=true;investmentFrequencyUserOverride=true;updateFrequencyCopy();render();});
+  els.sameAsPayCycle?.addEventListener('change',()=>{mycmTouched=true;if(els.sameAsPayCycle.checked){investmentFrequencyUserOverride=false;els.investmentFrequency.value=els.payFrequency.value;}else{investmentFrequencyUserOverride=true;}els.investmentFrequency.disabled=els.sameAsPayCycle.checked;updateFrequencyCopy();render();});
 
   els.copyBtn.addEventListener('click',copySummary);
   els.reportBtn.addEventListener('click',generateFIReport);
-  document.querySelectorAll('input').forEach(i=>i.addEventListener('input',render));
+  document.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{mycmTouched=true;render();}));
   els.targetAge.addEventListener('change',commitTargetAge);
   els.targetAge.addEventListener('blur',commitTargetAge);
   els.planUntilAge?.addEventListener('change',commitPlanUntilAge);
@@ -533,6 +563,7 @@
     el.addEventListener('blur',()=>commitBoundedNumber(el,min,max,fallback));
   });
 
+  configureMyCarrowmontSave();
   populateLocale();syncFrequencyOptions();
   if(applySeo3bHandoff()){updateLocaleSummary();syncFrequencyOptions();render();}
   else if(usesIndiaDemoDefaults()) render(); else resetMoneyForLocale();
