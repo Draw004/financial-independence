@@ -325,6 +325,26 @@
     };
   }
 
+
+  function earlyRetirementScenario(raw,age,overrides={}){
+    const normalized=normalize(raw);
+    const maxAge=normalized.planningMode==='until_age'?Math.min(90,Math.max(normalized.currentAge+1,normalized.planUntilAge-1)):90;
+    const targetAge=clamp(age,normalized.currentAge+1,maxAge);
+    const input={...raw,targetAge};
+    if(Number.isFinite(Number(overrides.monthlyIncome)))input.monthlyIncome=Math.max(0,Number(overrides.monthlyIncome));
+    if(Number.isFinite(Number(overrides.spendingPct)))input.spendingPct=clamp(overrides.spendingPct,0,200);
+    const r=result(input),t=r.target;
+    return {age:r.state.targetAge,target:t.target,portfolio:t.portfolio,gap:t.gap,surplus:t.surplus,funding:t.funding,requiredContribution:r.requiredContribution,additionalContribution:r.additionalContribution,portfolioMonthlyNeed:r.portfolioMonthlyNeed,modelledFI:r.modelledFI};
+  }
+
+  function earlyRetirementCompare(raw,opts={}){
+    const s=normalize(raw),maxAge=s.planningMode==='until_age'?Math.min(90,Math.max(s.currentAge+1,s.planUntilAge-1)):90;
+    const earlierYears=clamp(opts.earlierYears,1,15),earlierAge=Math.max(s.currentAge+1,Math.min(maxAge,s.targetAge-earlierYears));
+    const base=earlyRetirementScenario(raw,s.targetAge),earlier=earlyRetirementScenario(raw,earlierAge),oneMore=earlyRetirementScenario(raw,Math.min(maxAge,s.targetAge+1));
+    const adjusted=earlyRetirementScenario(raw,earlierAge,{monthlyIncome:opts.bridgeIncome,spendingPct:opts.spendingPct});
+    return {state:s,earlierYears,earlierAge,maxAge,earlier,base,oneMore,adjusted,oneMoreDelta:{portfolio:oneMore.portfolio-base.portfolio,target:oneMore.target-base.target,gap:oneMore.gap-base.gap,requiredContribution:oneMore.requiredContribution-base.requiredContribution},adjustedDelta:{target:adjusted.target-earlier.target,gap:adjusted.gap-earlier.gap,requiredContribution:adjusted.requiredContribution-earlier.requiredContribution}};
+  }
+
   function annualJourney(raw,endAge){
     const s=normalize(raw);
     if(s.planningMode==='until_age')return planUntilJourney(raw);
@@ -364,5 +384,5 @@
     return out;
   }
 
-  return {frequencyPeriods,periodsPerYear,periodicRate,normalize,monthlyRate,portfolioMonthlyNeedToday,fiTargetToday,fiTargetAtYears,futurePortfolioMonthlyNeed,requiredPortfolioForWindow,planUntilTargetAtAge,planningTargetAtAge,planningTargetToday,simulatePostFI,planUntilPostFIPath,planUntilJourney,planUntilDrawdownSeries,contributionForPeriod,contributionForMonth,portfolioAtPeriods,portfolioAtMonths,portfolioAtYears,modelledFI,targetProjection,requiredContribution,requiredMonthly,result,annualJourney,series};
+  return {frequencyPeriods,periodsPerYear,periodicRate,normalize,monthlyRate,portfolioMonthlyNeedToday,fiTargetToday,fiTargetAtYears,futurePortfolioMonthlyNeed,requiredPortfolioForWindow,planUntilTargetAtAge,planningTargetAtAge,planningTargetToday,simulatePostFI,planUntilPostFIPath,planUntilJourney,planUntilDrawdownSeries,contributionForPeriod,contributionForMonth,portfolioAtPeriods,portfolioAtMonths,portfolioAtYears,modelledFI,targetProjection,requiredContribution,requiredMonthly,result,earlyRetirementScenario,earlyRetirementCompare,annualJourney,series};
 });

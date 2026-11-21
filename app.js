@@ -3,11 +3,20 @@
   const L=window.CarrowmontLocale,C=window.CarrowmontFICore;
   if(!L||!C) return;
   const $=id=>document.getElementById(id);
+  function injectEarlyRetirementSection(){
+    if(document.getElementById('early-retirement-scenarios'))return;
+    const scenarios=document.getElementById('scenariosSection');if(!scenarios)return;
+    const section=document.createElement('section');section.className='early-retirement-lab';section.id='early-retirement-scenarios';section.setAttribute('aria-labelledby','earlyRetirementTitle');
+    section.innerHTML=`<div class="container"><div class="section-head wide"><div><div class="eyebrow">EARLY-RETIREMENT SCENARIOS</div><h2 id="earlyRetirementTitle">What changes if you leave full-time work earlier?</h2></div><p>Compare earlier retirement, your current target and one more working year using the same assumptions. Then test your own bridge-income or spending change without changing the main plan.</p></div><div class="early-retirement-controls" aria-label="Early-retirement scenario assumptions"><label class="field"><span>Compare retiring this many years earlier</span><div class="input-suffix"><input id="earlyRetirementYears" data-scenario-only="true" type="number" min="1" max="15" step="1" value="5"><span>yrs</span></div><small>Carrowmont will never move the scenario below one year from your current age.</small></label><label class="field"><span>Monthly bridge / part-time income</span><div class="money-input"><span class="currency-prefix">₹</span><input id="earlyBridgeIncome" data-scenario-only="true" type="number" min="0" step="1000" value="0"></div><small>Scenario-only income after leaving full-time work. Enter zero if you do not expect it.</small></label><label class="field"><span>Scenario spending at early retirement</span><div class="input-suffix"><input id="earlyScenarioSpendingPct" data-scenario-only="true" type="number" min="0" max="200" step="1" value="100"><span>% of today</span></div><small>Use your own lifestyle estimate; Carrowmont does not assume a Lean/Fat FIRE percentage.</small></label></div><div class="early-retirement-grid" id="earlyRetirementGrid" aria-live="polite"></div><div class="early-retirement-one-more" id="earlyOneMoreSummary"></div><div class="early-retirement-risk-grid"><article><strong>First-years market risk</strong><p>This deterministic model uses a constant expected return. It does not simulate bad market returns arriving immediately after you stop working.</p></article><article><strong>Healthcare, tax and pension gaps</strong><p>Include costs and reliable non-portfolio income deliberately. Pension start dates, taxes, insurance rules and healthcare eligibility are not inferred automatically.</p></article><article><strong>Life after the number</strong><p>Reaching a modelled target does not decide whether you should retire. Family commitments, housing, purpose, flexibility and a return-to-work plan may matter too.</p></article></div><p class="early-retirement-note"><strong>Why no fixed FIRE labels?</strong> Terms such as Barista, Lean, Fat and Coast FIRE can be useful shorthand, but their percentages vary. This comparison uses the income and spending assumptions you enter instead of assigning a preset lifestyle.</p><div class="early-retirement-actions"><a class="btn btn-outline btn-link" href="/early-retirement-planning.html">Read the early-retirement guide</a><a class="btn btn-outline btn-link" href="/retirement-calculator/">Model detailed retirement expenses</a></div></div>`;
+    scenarios.insertAdjacentElement('afterend',section);
+    if(window.location.hash==='#early-retirement-scenarios')setTimeout(()=>section.scrollIntoView({block:'start'}),0);
+  }
+  injectEarlyRetirementSection();
   const els={
     localeMenu:$('localeMenu'),localeCurrent:$('localeCurrent'),regionSelect:$('regionSelect'),currencySelect:$('currencySelect'),localeDone:$('localeDone'),seo3bHandoffNotice:$('seo3bHandoffNotice'),
     currentAge:$('currentAge'),targetAge:$('targetAge'),planningModeSustainable:$('planningModeSustainable'),planningModeUntilAge:$('planningModeUntilAge'),planUntilAge:$('planUntilAge'),planUntilField:$('planUntilField'),withdrawalRateField:$('withdrawalRateField'),monthlySpending:$('monthlySpending'),spendingPct:$('spendingPct'),monthlyIncome:$('monthlyIncome'),withdrawalRate:$('withdrawalRate'),inflation:$('inflation'),currentAssets:$('currentAssets'),monthlyContribution:$('monthlyContribution'),payFrequency:$('payFrequency'),investmentFrequency:$('investmentFrequency'),sameAsPayCycle:$('sameAsPayCycle'),currentInvestmentLabel:$('currentInvestmentLabel'),currentInvestmentHelp:$('currentInvestmentHelp'),annualReturn:$('annualReturn'),annualStepUp:$('annualStepUp'),resetBtn:$('resetBtn'),
     targetPill:$('targetPill'),fiHeroLabel:$('fiHeroLabel'),fiToday:$('fiToday'),fiTodayNote:$('fiTodayNote'),modelledAge:$('modelledAge'),fiTargetAgeLabel:$('fiTargetAgeLabel'),fiTargetAge:$('fiTargetAge'),portfolioTargetAge:$('portfolioTargetAge'),requiredMonthly:$('requiredMonthly'),additionalMonthly:$('additionalMonthly'),requiredInvestmentLabel:$('requiredInvestmentLabel'),additionalInvestmentLabel:$('additionalInvestmentLabel'),fundingBoxLabel:$('fundingBoxLabel'),fundingPct:$('fundingPct'),fundingBar:$('fundingBar'),fundingText:$('fundingText'),longevityBox:$('longevityBox'),longevityPlanAge:$('longevityPlanAge'),longevityBalance:$('longevityBalance'),longevityStatus:$('longevityStatus'),longevityFirstWithdrawal:$('longevityFirstWithdrawal'),longevityNote:$('longevityNote'),copyBtn:$('copyBtn'),
-    netSpendCard:$('netSpendCard'),fiTodayCardLabel:$('fiTodayCardLabel'),fiTodayCard:$('fiTodayCard'),fiTargetCardLabel:$('fiTargetCardLabel'),fiTargetCard:$('fiTargetCard'),portfolioCard:$('portfolioCard'),pathChartTitle:$('pathChartTitle'),pathChartNote:$('pathChartNote'),pathChart:$('pathChart'),growthChartEyebrow:$('growthChartEyebrow'),growthChartTitle:$('growthChartTitle'),growthChartNote:$('growthChartNote'),growthChart:$('growthChart'),visualEmpty:$('visualEmpty'),visualContent:$('visualContent'),insightsSection:$('insightsSection'),scenariosSection:$('scenariosSection'),
+    netSpendCard:$('netSpendCard'),fiTodayCardLabel:$('fiTodayCardLabel'),fiTodayCard:$('fiTodayCard'),fiTargetCardLabel:$('fiTargetCardLabel'),fiTargetCard:$('fiTargetCard'),portfolioCard:$('portfolioCard'),pathChartTitle:$('pathChartTitle'),pathChartNote:$('pathChartNote'),pathChart:$('pathChart'),growthChartEyebrow:$('growthChartEyebrow'),growthChartTitle:$('growthChartTitle'),growthChartNote:$('growthChartNote'),growthChart:$('growthChart'),visualEmpty:$('visualEmpty'),visualContent:$('visualContent'),insightsSection:$('insightsSection'),scenariosSection:$('scenariosSection'),earlyRetirementSection:$('early-retirement-scenarios'),earlyRetirementYears:$('earlyRetirementYears'),earlyBridgeIncome:$('earlyBridgeIncome'),earlyScenarioSpendingPct:$('earlyScenarioSpendingPct'),earlyRetirementGrid:$('earlyRetirementGrid'),earlyOneMoreSummary:$('earlyOneMoreSummary'),
     insightMultipleLabel:$('insightMultipleLabel'),insightMultiple:$('insightMultiple'),insightMultipleText:$('insightMultipleText'),insightInflationLabel:$('insightInflationLabel'),insightInflation:$('insightInflation'),insightInflationText:$('insightInflationText'),insightTiming:$('insightTiming'),insightTimingText:$('insightTimingText'),insightAdjustment:$('insightAdjustment'),insightAdjustmentText:$('insightAdjustmentText'),scenarioGrid:$('scenarioGrid'),fiJourney:$('fiJourney'),journeyMoneyAdded:$('journeyMoneyAdded'),journeyGrowth:$('journeyGrowth'),journeyPortfolio:$('journeyPortfolio'),journeyFunding:$('journeyFunding'),journeyMilestones:$('journeyMilestones'),journeyDetails:$('journeyDetails'),journeyCount:$('journeyCount'),journeyHeadRow:$('journeyHeadRow'),journeyTargetHead:$('journeyTargetHead'),journeyBody:$('journeyBody'),journeyNote:$('journeyNote'),reportBtn:$('reportBtn')
   };
   let pendingRegion=L.getRegion(),pendingCurrency=L.getCurrency();
@@ -139,6 +148,7 @@
   function resetMoneyForLocale(){els.monthlySpending.value=0;els.monthlyIncome.value=0;els.currentAssets.value=0;els.monthlyContribution.value=0;render();}
   function resetAll(){
     mycmTouched=false;
+    if(els.earlyRetirementYears)els.earlyRetirementYears.value=5;if(els.earlyBridgeIncome)els.earlyBridgeIncome.value=0;if(els.earlyScenarioSpendingPct)els.earlyScenarioSpendingPct.value=100;
     els.currentAge.value=35;els.targetAge.value=50;if(els.planningModeSustainable)els.planningModeSustainable.checked=true;if(els.planningModeUntilAge)els.planningModeUntilAge.checked=false;if(els.planUntilAge)els.planUntilAge.value=95;els.monthlySpending.value=100000;els.spendingPct.value=100;els.monthlyIncome.value=0;els.withdrawalRate.value=4;els.inflation.value=5;els.currentAssets.value=1500000;els.monthlyContribution.value=30000;els.annualReturn.value=10;els.annualStepUp.value=5;payFrequencyUserOverride=false;investmentFrequencyUserOverride=false;if(els.sameAsPayCycle)els.sameAsPayCycle.checked=false;syncFrequencyOptions();
     if(!usesIndiaDemoDefaults()) resetMoneyForLocale(); else render();
   }
@@ -222,6 +232,7 @@
     bridge.register({journey:'financial-independence',toolPath:'/financial-independence/',anchor:'#visualContent',
       getPlan(){
         const s=state();if(!mycmTouched||!(s.monthlySpending>0||s.currentAssets>0||s.monthlyContribution>0))return null;
+        const r=C.result(s);
         const periods=C.periodsPerYear?.(s.investmentFrequency)||12;
         return {label:`Financial independence plan - target age ${Math.round(s.targetAge)}`,scenario:{input:{...s,country:L.getRegion(),currency:L.getCurrency()},summary:{targetAge:s.targetAge,monthlySpending:s.monthlySpending,currentAssets:s.currentAssets,modelledFIAge:r.modelledFI?.age??null,requiredContribution:r.requiredContribution,additionalContribution:r.additionalContribution,investmentFrequency:s.investmentFrequency}},profileFacts:{
           'fi.currentAge':{value:s.currentAge,unit:'years',source:'Financial Independence'},'fi.targetAge':{value:s.targetAge,unit:'years',source:'Financial Independence'},'fi.monthlySpending':{value:s.monthlySpending,unit:L.getCurrency(),source:'Financial Independence'},'fi.monthlyPassiveIncome':{value:s.monthlyIncome,unit:L.getCurrency(),source:'Financial Independence'},'fi.withdrawalRatePct':{value:s.withdrawalRate,unit:'pct',source:'Financial Independence'},'fi.inflationPct':{value:s.inflation,unit:'pct',source:'Financial Independence'},'fi.currentAssets':{value:s.currentAssets,unit:L.getCurrency(),source:'Financial Independence'},'fi.monthlyContribution':{value:s.monthlyContribution*periods/12,unit:L.getCurrency(),source:'Financial Independence'},'fi.annualReturnPct':{value:s.annualReturn,unit:'pct',source:'Financial Independence'},'fi.annualStepUpPct':{value:s.annualStepUp,unit:'pct',source:'Financial Independence'}
@@ -294,6 +305,8 @@
       els.fundingText.textContent='Your funding estimate will appear after you add spending or investment details.';
       if(els.longevityBox)els.longevityBox.hidden=true;
       els.pathChart.innerHTML='';els.growthChart.innerHTML='';els.scenarioGrid.innerHTML='';if(els.journeyBody)els.journeyBody.innerHTML='';
+      if(els.earlyRetirementGrid)els.earlyRetirementGrid.innerHTML='<div class="empty-state early-retirement-empty"><div class="empty-state-icon" aria-hidden="true">→</div><div><h3>Add your FI details above</h3><p>Enter your spending and investment details in the main planner first. Carrowmont will then compare retiring earlier, your selected target, one more working year and your own adjusted early-retirement scenario using the same plan assumptions.</p></div></div>';
+      if(els.earlyOneMoreSummary){els.earlyOneMoreSummary.hidden=true;els.earlyOneMoreSummary.innerHTML='';}
       return;
     }
     if(isUntil){
@@ -328,7 +341,7 @@
     if(isUntil&&r.longevity&&els.longevityBox){
       const lp=r.longevity.projection;els.longevityBox.hidden=false;els.longevityPlanAge.textContent=`Age ${Math.round(s.planUntilAge)}`;els.longevityBalance.textContent=lp.lasts?compact(lp.finalBalance):money(0);els.longevityStatus.textContent=lp.lasts?`Lasts through age ${Math.round(s.planUntilAge)}`:`Projected to deplete at ${absoluteAgeText(lp.depletionAge)}`;els.longevityFirstWithdrawal.textContent=`${money(r.longevity.monthlyNeedAtTarget)}/mo`;els.longevityNote.textContent=`Uses the same ${(s.annualReturn*100).toFixed(1)}% expected annual return after FI and inflation-adjusted monthly portfolio-funded spending. Projected portfolio balances are future nominal ${L.getCurrency()} values. Taxes, fees and sequence-of-returns risk are not modelled.`;
     }else if(els.longevityBox)els.longevityBox.hidden=true;
-    renderInsights(r);renderScenarios(r);renderCharts(r,raw);renderJourney(r,raw);
+    renderInsights(r);renderScenarios(r);renderEarlyRetirementScenarios(raw);renderCharts(r,raw);renderJourney(r,raw);
     if(mycmTouched)window.CarrowmontPlanSave?.offer?.('financial-independence');
   }
 
@@ -359,6 +372,32 @@
       els.insightAdjustment.textContent=r.additionalContribution>0?`+${contributionText(r.additionalContribution,s.investmentFrequency)}`:'No increase modelled';
       els.insightAdjustmentText.textContent=r.additionalContribution>0?`Starting investment required ${cadenceText(s.investmentFrequency)} for age ${Math.round(s.targetAge)} is ${money(r.requiredContribution)}, before applying the annual step-up.`:`The current investment ${cadenceText(s.investmentFrequency)} is already at or above the modelled starting amount required for age ${Math.round(s.targetAge)}.`;
     }
+  }
+
+  function renderEarlyRetirementScenarios(raw){
+    if(!C.earlyRetirementCompare||!els.earlyRetirementGrid)return;
+    const earlierYears=Math.max(1,Math.min(15,num(els.earlyRetirementYears,5)));
+    const bridgeIncome=Math.max(0,num(els.earlyBridgeIncome,0));
+    const scenarioSpendingPct=Math.max(0,Math.min(200,num(els.earlyScenarioSpendingPct,100)));
+    let c;
+    try{c=C.earlyRetirementCompare(raw,{earlierYears,bridgeIncome,spendingPct:scenarioSpendingPct});}catch(_){els.earlyRetirementGrid.innerHTML='<div class="empty-state early-retirement-empty"><div class="empty-state-icon" aria-hidden="true">!</div><div><h3>Review your FI details</h3><p>Carrowmont could not build the early-retirement comparison from the current inputs. Review the main planner values above and try again.</p></div></div>';if(els.earlyOneMoreSummary){els.earlyOneMoreSummary.hidden=true;els.earlyOneMoreSummary.innerHTML='';}return;}
+    if(els.earlyOneMoreSummary)els.earlyOneMoreSummary.hidden=false;
+    const card=(title,tag,x,desc,cls='')=>`<article class="early-retirement-card ${cls}"><span class="tag">${esc(tag)}</span><h3>${esc(title)}</h3><p>${esc(desc)}</p><dl class="early-retirement-metrics"><div><dt>Modelled target</dt><dd>${compact(x.target)}</dd></div><div><dt>Projected portfolio</dt><dd>${compact(x.portfolio)}</dd></div><div><dt>Funding at that age</dt><dd>${pct(Math.min(9.99,Math.max(0,x.funding)))}</dd></div><div><dt>Starting investment required</dt><dd>${contributionText(x.requiredContribution,c.state.investmentFrequency)}</dd></div></dl></article>`;
+    const earlierDesc=c.earlierAge<c.state.targetAge?`${Math.round(c.state.targetAge-c.earlierAge)} year${Math.round(c.state.targetAge-c.earlierAge)===1?'':'s'} before your selected target, with the main-plan assumptions unchanged.`:'Your selected target is already too close to your current age to move this scenario earlier.';
+    const adjustedChanges=[];
+    if(bridgeIncome>0)adjustedChanges.push(`${money(bridgeIncome)}/mo bridge income`);
+    if(Math.abs(scenarioSpendingPct-c.state.spendingPct*100)>.5)adjustedChanges.push(`${Math.round(scenarioSpendingPct)}% of today's spending`);
+    els.earlyRetirementGrid.innerHTML=[
+      card(`Age ${Math.round(c.earlier.age)}`,'Earlier',c.earlier,earlierDesc),
+      card(`Age ${Math.round(c.base.age)}`,'Current target',c.base,'Your selected Target Age and current planner assumptions.','primary'),
+      card(`Age ${Math.round(c.oneMore.age)}`,'One more year',c.oneMore,c.oneMore.age>c.base.age?'One additional year of contributions and investment growth before FI.':'The planning horizon prevents moving the target one year later.'),
+      card(`Age ${Math.round(c.adjusted.age)}`,'Earlier + your changes',c.adjusted,adjustedChanges.length?`Uses ${adjustedChanges.join(' and ')}.`:'No bridge-income or spending change is entered yet, so this currently matches the earlier scenario.','adjusted')
+    ].join('');
+    const portfolioGain=c.oneMoreDelta.portfolio,requiredChange=c.oneMoreDelta.requiredContribution,gapChange=c.oneMoreDelta.gap;
+    const gainText=portfolioGain>=0?`${compact(portfolioGain)} more projected portfolio`:`${compact(Math.abs(portfolioGain))} less projected portfolio`;
+    const reqText=requiredChange<0?`${contributionText(Math.abs(requiredChange),c.state.investmentFrequency)} less starting investment required`:requiredChange>0?`${contributionText(requiredChange,c.state.investmentFrequency)} more starting investment required`:'no change in the modelled starting investment required';
+    const gapText=gapChange<0?`and reduces the target-age funding gap by ${compact(Math.abs(gapChange))}`:gapChange>0?`and increases the target-age funding gap by ${compact(gapChange)}`:'with no change in the target-age funding gap';
+    els.earlyOneMoreSummary.innerHTML=`<strong>What one more year changes:</strong> Under these constant-return assumptions, waiting from age ${Math.round(c.base.age)} to ${Math.round(c.oneMore.age)} produces ${gainText}, ${reqText}, ${gapText}. This is arithmetic, not a recommendation to keep working.`;
   }
 
   function renderScenarios(r){
@@ -544,7 +583,7 @@
 
   els.copyBtn.addEventListener('click',copySummary);
   els.reportBtn.addEventListener('click',generateFIReport);
-  document.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{mycmTouched=true;render();}));
+  document.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{if(!i.matches('[data-scenario-only]'))mycmTouched=true;render();}));
   els.targetAge.addEventListener('change',commitTargetAge);
   els.targetAge.addEventListener('blur',commitTargetAge);
   els.planUntilAge?.addEventListener('change',commitPlanUntilAge);
@@ -558,6 +597,12 @@
     el.addEventListener('change',()=>fn(el));
     el.addEventListener('blur',()=>fn(el));
   });
+  [[els.earlyRetirementYears,1,15,5],[els.earlyScenarioSpendingPct,0,200,100]].filter(([el])=>el).forEach(([el,min,max,fallback])=>{
+    el.addEventListener('change',()=>commitBoundedNumber(el,min,max,fallback));
+    el.addEventListener('blur',()=>commitBoundedNumber(el,min,max,fallback));
+  });
+  if(els.earlyBridgeIncome){els.earlyBridgeIncome.addEventListener('change',()=>commitNonNegative(els.earlyBridgeIncome));els.earlyBridgeIncome.addEventListener('blur',()=>commitNonNegative(els.earlyBridgeIncome));}
+
   [[els.spendingPct,0,200,100],[els.withdrawalRate,0.5,15,4],[els.inflation,0,25,5],[els.annualReturn,0,30,10],[els.annualStepUp,0,30,5]].forEach(([el,min,max,fallback])=>{
     el.addEventListener('change',()=>commitBoundedNumber(el,min,max,fallback));
     el.addEventListener('blur',()=>commitBoundedNumber(el,min,max,fallback));
